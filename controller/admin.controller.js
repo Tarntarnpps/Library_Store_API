@@ -76,10 +76,6 @@ exports.history = async (req, res) => {
     const {
       primaryIdBook, bookName, idBook, writer,
     } = req.body
-    const user = await User.findOne({ role: 'ADMIN' }).lean()
-    if (!(user)) {
-      return res.status(495).json({ data: 'Please try again, Username not found or you not ADMIN' })
-    }
     if (!req.user || (req.user.role !== 'ADMIN')) {
       return res.status(493).json({ data: 'Please try again' })
     }
@@ -109,7 +105,6 @@ exports.history = async (req, res) => {
       }
     }
     const bookData = await History.find(bookHistoryobj).exec()
-    // console.log(bookData)
     // *** OUTPUT
     return res.status(222).json({ success: true, data: bookData })
   } catch (e) {
