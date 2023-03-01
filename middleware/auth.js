@@ -30,11 +30,9 @@ const optional = async (req, res, next) => {
   try {
     const authOptionnal = await User.findOne({ token }).lean()
     const decoded = jwt.verify(token, config.TOKEN_KEY)
-    // console.log(authOptionnal)
     if (!authOptionnal) throw 'wrong token'
     req.user = decoded
   } catch (e) {
-    // console.log(e)
     return res.status(401).json({ data: 'Invalid Token' })
   }
   return next()
