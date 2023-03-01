@@ -24,9 +24,6 @@ const verifyToken = async (req, res, next) => {
 
 const optional = async (req, res, next) => {
   const token = req.body.token || req.query.token || req.headers['x-access-token']
-  // if (!optional) {
-  //   return res.status(401).json({ data: 'Invalid Token' })
-  // }
   if (!token) {
     return next()
   }
@@ -46,5 +43,4 @@ const optional = async (req, res, next) => {
 module.exports = {
   optional,
   verifyToken,
-  // Auth,
 }

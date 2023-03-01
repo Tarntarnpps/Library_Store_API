@@ -16,4 +16,5 @@ const BooksSchema = mongoose.Schema({
   status: { type: String, enum: statusBook, default: 'Avaliable' },
 })
 
+BooksSchema.index({ primaryIdBook: 1 })
 module.exports = mongoose.model('bookData', BooksSchema)

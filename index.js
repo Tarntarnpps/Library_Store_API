@@ -1,6 +1,5 @@
 require('dotenv').config()
 
-// const http = require('http')
 const app = require('./routes/index')
 
 const { API_PORT } = process.env

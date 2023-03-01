@@ -5,8 +5,6 @@ const { mongouri } = vars
 mongoose.connect(mongouri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  // useCreateIndex: true,
-  // useFindAndModify: false
 })
   .then(() => {
     console.log('Successfully connect to database')
