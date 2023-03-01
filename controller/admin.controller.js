@@ -16,7 +16,7 @@ exports.register = async (req, res) => {
     }
     const oldUser = await User.findOne({ username }).lean()
     if (oldUser) {
-      return res.status(409).json({ data: 'User alredy exist. Please login' })
+      return res.status(400).json({ data: 'User alredy exist. Please login' })
     }
     // Encrypt user password
     const encryptedPassword = await bcrypt.hash(password, 10)
@@ -29,7 +29,7 @@ exports.register = async (req, res) => {
       role: 'ADMIN',
     })
     // return new user
-    return res.status(201).json({ data: user })
+    return res.status(200).json({ data: user })
   } catch (e) {
     console.log(e)
   }
@@ -77,7 +77,7 @@ exports.history = async (req, res) => {
       primaryIdBook, bookName, idBook, writer,
     } = req.body
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(493).json({ data: 'Please try again' })
+      return res.status(400).json({ data: 'Please try again' })
     }
     let bookHistoryobj = {}
     if (primaryIdBook) {
@@ -106,8 +106,8 @@ exports.history = async (req, res) => {
     }
     const bookData = await History.find(bookHistoryobj).exec()
     // *** OUTPUT
-    return res.status(222).json({ success: true, data: bookData })
+    return res.status(200).json({ success: true, data: bookData })
   } catch (e) {
-    return res.status(404).json({ error: String(e) })
+    return res.status(400).json({ error: String(e) })
   }
 }

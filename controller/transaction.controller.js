@@ -32,14 +32,14 @@ exports.rent = async (req, res) => {
     } = req.body
     const user = await User.findOne({ role: 'USER' }).lean()
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(493).json({ data: 'Please try again' })
+      return res.status(400).json({ data: 'Please try again' })
     }
     const book = await Book.findOne({ idBook, status: 'Avaliable' }).lean()
     if (!(user)) {
-      return res.status(490).json({ data: 'Please try again, Username not found or you not USER' })
+      return res.status(400).json({ data: 'Please try again, Username not found or you not USER' })
     }
     if (!(book)) {
-      return res.status(491).json({ data: 'Please try again, Book not already for rent' })
+      return res.status(400).json({ data: 'Please try again, Book not already for rent' })
     }
     const currentBookRent = await History.find({ username, status: 'Rent' }).lean()
     // ถ้ายืม id นี้แล้ว ไม่ให้ยืมซ้ำ
@@ -47,11 +47,11 @@ exports.rent = async (req, res) => {
       const _currentBookRent = currentBookRent.find((v) => v.idBook === idBook)
       const __currentBookRent = currentBookRent.find((v) => v.bookName === book.bookName)
       if (_currentBookRent && __currentBookRent) {
-        return res.status(489).json({ data: 'Please try again' })
+        return res.status(400).json({ data: 'Please try again' })
       }
       console.log(currentBookRent.length)
       if (currentBookRent.length >= 5) {
-        return res.status(492).json({ data: 'Have already 5 book to rent, Please return for new rent book' })
+        return res.status(400).json({ data: 'Have already 5 book to rent, Please return for new rent book' })
       }
     }
     await Book.updateOne({
@@ -87,12 +87,12 @@ exports.return = async (req, res) => {
     const { username, idBook } = req.body
     // Check role
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(493).json({ data: 'Please try again' })
+      return res.status(400).json({ data: 'Please try again' })
     }
     // Find data
     const returnDataHistory = await History.findOne({ username, idBook, status: 'Rent' }).lean()
     if (!(returnDataHistory)) {
-      return res.status(493).json({ data: 'Please try again' })
+      return res.status(400).json({ data: 'Please try again' })
     }
     const CalculatesDate = calDate(returnDataHistory.dateRent, DateUse)
     await History.updateOne({

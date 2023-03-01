@@ -20,7 +20,7 @@ exports.register = async (req, res) => {
     }
     const oldUser = await User.findOne({ username }).lean()
     if (oldUser) {
-      return res.status(409).json({ data: 'User alredy exist. Please login' })
+      return res.status(400).json({ data: 'User alredy exist. Please login' })
     }
     // Encrypt user password
     const encryptedPassword = await bcrypt.hash(password, 10)
@@ -33,7 +33,7 @@ exports.register = async (req, res) => {
       role: 'USER',
     })
     // return new user
-    res.status(201).json({ data: user })
+    res.status(200).json({ data: user })
   } catch (e) {
     console.log(e)
   }
@@ -80,7 +80,7 @@ exports.history = async (req, res) => {
     const { username, firstname, lastname } = req.body
     console.log(req.user)
     if (!req.user || (req.user.role !== 'USER')) {
-      return res.status(209).json({ data: 'Please login' })
+      return res.status(400).json({ data: 'Please login' })
     }
     let userHistoryobj = {}
     if (username) {
@@ -103,8 +103,8 @@ exports.history = async (req, res) => {
     }
     const userData = await History.find(userHistoryobj).exec()
     // *** OUTPUT
-    return res.status(202).json({ success: true, data: userData })
+    return res.status(200).json({ success: true, data: userData })
   } catch (e) {
-    return res.status(408).json({ error: String(e) })
+    return res.status(400).json({ error: String(e) })
   }
 }

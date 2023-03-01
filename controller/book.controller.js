@@ -19,7 +19,7 @@ exports.register = async (req, res) => {
 
     // add ข้อมูลหนังสือต่่างๆ ถ้ายังไม่มีของเดิม
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(209).json({ data: 'Please try again, Username not found or you not ADMIN' })
+      return res.status(400).json({ data: 'Please try again, Username not found or you not ADMIN' })
     }
     if (!(primaryIdBook && idBook)) {
       return res.status(400).json({ data: 'All required' })
@@ -28,7 +28,7 @@ exports.register = async (req, res) => {
     if (bookOldCheck.length > 0) {
       const oldBook = bookOldCheck.find((v) => v.idBook === idBook)
       if (oldBook) {
-        return res.status(409).json({ data: 'Book alredy library. Please try again' })
+        return res.status(400).json({ data: 'Book alredy library. Please try again' })
       }
       const _bookOldCheck = bookOldCheck[0]
       const book = await new Book({
@@ -40,7 +40,7 @@ exports.register = async (req, res) => {
         publisher: _bookOldCheck.publisher,
         catagory: _bookOldCheck.catagory,
       }).save()
-      return res.status(202).json({ status: 'done', data: book })
+      return res.status(200).json({ status: 'done', data: book })
     }
     if (!(bookName && writer && publisher && catagory)) {
       return res.status(400).json({ data: 'All required' })
@@ -54,10 +54,10 @@ exports.register = async (req, res) => {
       publisher,
       catagory,
     }).save()
-    return res.status(202).json({ status: 'done', data: bookNew }) // Response message
+    return res.status(200).json({ status: 'done', data: bookNew }) // Response message
   } catch (e) {
     console.log(e)
-    return res.status(404).json({ data: 'failed' }) // Response message
+    return res.status(400).json({ data: 'failed' }) // Response message
   }
 }
 
@@ -95,8 +95,8 @@ exports.data = async (req, res) => {
     }
     const bookData = await Book.find(bookHistoryobj).exec()
     // *** OUTPUT
-    return res.status(222).json({ success: true, data: bookData })
+    return res.status(200).json({ success: true, data: bookData })
   } catch (e) {
-    return res.status(404).json({ error: String(e) })
+    return res.status(400).json({ error: String(e) })
   }
 }
