@@ -45,7 +45,7 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body
     if (!(username && password)) {
-      return res.status(codeStatus.Failed).json({ data: 'All input required' })
+      return res.status(codeStatus.Failed).json({ data: Response })
     }
     const user = await User.findOne({ username, role: 'USER' }).lean()
     if (user && (await bcrypt.compare(password, user.password))) {
@@ -81,7 +81,7 @@ exports.history = async (req, res) => {
     const { username, firstname, lastname } = req.body
     console.log(req.user)
     if (!req.user || (req.user.role !== 'USER')) {
-      return res.status(codeStatus.Failed).json({ data: 'Please login' })
+      return res.status(codeStatus.Failed).json({ data: Response })
     }
     let userHistoryobj = {}
     if (username) {

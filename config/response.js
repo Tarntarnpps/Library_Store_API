@@ -6,10 +6,10 @@ const codeStatus = {
 const status = (code) => {
   let res
   switch (code) {
-    case 0:
+    case 200:
       res = { code, message: 'Done' }
       break
-    case codeStatus.Failed:
+    case 400:
       res = { code, message: 'Failed' }
       break
     default: break

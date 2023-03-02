@@ -33,14 +33,14 @@ exports.rent = async (req, res) => {
     } = req.body
     const user = await User.findOne({ role: 'USER' }).lean()
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(codeStatus.Failed).json({ data: 'Please try again' })
+      return res.status(codeStatus.Failed).json({ data: Response })
     }
     const book = await Book.findOne({ idBook, status: 'Avaliable' }).lean()
     if (!(user)) {
-      return res.status(codeStatus.Failed).json({ data: 'Please try again, Username not found or you not USER' })
+      return res.status(codeStatus.Failed).json({ data: Response })
     }
     if (!(book)) {
-      return res.status(codeStatus.Failed).json({ data: 'Please try again, Book not already for rent' })
+      return res.status(codeStatus.Failed).json({ data: Response })
     }
     const currentBookRent = await History.find({ username, status: 'Rent' }).lean()
     // ถ้ายืม id นี้แล้ว ไม่ให้ยืมซ้ำ
@@ -48,11 +48,11 @@ exports.rent = async (req, res) => {
       const _currentBookRent = currentBookRent.find((v) => v.idBook === idBook)
       const __currentBookRent = currentBookRent.find((v) => v.bookName === book.bookName)
       if (_currentBookRent && __currentBookRent) {
-        return res.status(codeStatus.Failed).json({ data: 'Please try again' })
+        return res.status(codeStatus.Failed).json({ data: Response })
       }
       console.log(currentBookRent.length)
       if (currentBookRent.length >= 5) {
-        return res.status(codeStatus.Failed).json({ data: 'Have already 5 book to rent, Please return for new rent book' })
+        return res.status(codeStatus.Failed).json({ data: Response })
       }
     }
     await Book.updateOne({
@@ -72,8 +72,8 @@ exports.rent = async (req, res) => {
     }).save()
     return res.status(codeStatus.Success).json(bookRent)
   } catch (e) {
-    return res.status(500).json({
-      code: codeStatus.Failed,
+    return res.status(codeStatus.Failed).json({
+      code: 400,
       message: 'error',
       error: String(e),
     })
@@ -88,12 +88,12 @@ exports.return = async (req, res) => {
     const { username, idBook } = req.body
     // Check role
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(codeStatus.Failed).json({ data: 'Please try again' })
+      return res.status(codeStatus.Failed).json({ data: Response })
     }
     // Find data
     const returnDataHistory = await History.findOne({ username, idBook, status: 'Rent' }).lean()
     if (!(returnDataHistory)) {
-      return res.status(codeStatus.Failed).json({ data: 'Please try again' })
+      return res.status(codeStatus.Failed).json({ data: Response })
     }
     const CalculatesDate = calDate(returnDataHistory.dateRent, DateUse)
     await History.updateOne({
@@ -111,7 +111,7 @@ exports.return = async (req, res) => {
     }, {
       status: 'Avaliable',
     })
-    return res.status(codeStatus.Success).json({ data: 'Update Done' })
+    return res.status(codeStatus.Success).json({ data: Response })
   } catch (e) {
     return res.status(500).json({
       code: 100,

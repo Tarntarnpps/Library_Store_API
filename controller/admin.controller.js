@@ -13,11 +13,11 @@ exports.register = async (req, res) => {
       firstname, lastname, username, password,
     } = req.body
     if (!(firstname && lastname && username && password)) {
-      return res.status(codeStatus.Failed).json({ data: 'Please try agin' })
+      return res.status(codeStatus.Failed).json({ data: Response })
     }
     const oldUser = await User.findOne({ username }).lean()
     if (oldUser) {
-      return res.status(codeStatus.Failed).json({ data: 'User alredy exist. Please login' })
+      return res.status(codeStatus.Failed).json({ data: Response })
     }
     // Encrypt user password
     const encryptedPassword = await bcrypt.hash(password, 10)
@@ -41,7 +41,7 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body
     if (!(username && password)) {
-      res.status(codeStatus.Failed).json({ data: 'Please try agin' })
+      res.status(codeStatus.Failed).json({ data: Response })
     }
     const user = await User.findOne({ username, role: 'ADMIN' }).lean()
     if (user && (await bcrypt.compare(password, user.password))) {
@@ -62,7 +62,7 @@ exports.login = async (req, res) => {
       )
       user.token = token
       await User.updateOne({ _id }, { token })
-      return res.status(codeStatus.Success).json({ status: 'Done', data: user })
+      return res.status(codeStatus.Success).json({ Response })
     }
     return res.status(codeStatus.Success).json({ status: 'Done', data: user })
   } catch (e) {
@@ -78,7 +78,7 @@ exports.history = async (req, res) => {
       primaryIdBook, bookName, idBook, writer,
     } = req.body
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(codeStatus.Failed).json({ data: 'Please try again' })
+      return res.status(codeStatus.Failed).json({ Response })
     }
     let bookHistoryobj = {}
     if (primaryIdBook) {

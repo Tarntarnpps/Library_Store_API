@@ -20,16 +20,16 @@ exports.register = async (req, res) => {
 
     // add ข้อมูลหนังสือต่่างๆ ถ้ายังไม่มีของเดิม
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(codeStatus.Failed).json({ data: 'Please try again, Username not found or you not ADMIN' })
+      return res.status(codeStatus.Failed).json({ data: Response })
     }
     if (!(primaryIdBook && idBook)) {
-      return res.status(codeStatus.Failed).json({ data: 'All required' })
+      return res.status(codeStatus.Failed).json({ data: Response })
     }
     const bookOldCheck = await Book.find({ primaryIdBook }).lean()
     if (bookOldCheck.length > 0) {
       const oldBook = bookOldCheck.find((v) => v.idBook === idBook)
       if (oldBook) {
-        return res.status(codeStatus.Failed).json({ data: 'Book alredy library. Please try again' })
+        return res.status(codeStatus.Failed).json({ data: Response })
       }
       const _bookOldCheck = bookOldCheck[0]
       const book = await new Book({

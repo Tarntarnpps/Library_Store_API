@@ -8,7 +8,7 @@ const verifyToken = async (req, res, next) => {
   const token = req.body.token || req.query.token || req.headers['x-access-token']
   console.log(token)
   if (!token) {
-    return res.status(codeStatus.Failed).json({ data: 'A token is required for authentication' })
+    return res.status(codeStatus.Failed).json({ data: Response })
   }
   try {
     const userId = await User.findOne({ token }).lean()
