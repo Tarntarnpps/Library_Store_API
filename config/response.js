@@ -1,5 +1,5 @@
 const codeStatus = {
-  Success: 0,
+  Success: 200,
   Failed: 400,
 }
 
