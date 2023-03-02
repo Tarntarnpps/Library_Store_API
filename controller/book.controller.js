@@ -58,7 +58,7 @@ exports.register = async (req, res) => {
     return res.status(codeStatus.Success).json({ status: 'done', data: bookNew }) // Response message
   } catch (e) {
     console.log(e)
-    return res.status(codeStatus.Failed).json({ data: 'failed' }) // Response message
+    return res.status(codeStatus.Failed).json({ data: Response }) // Response message
   }
 }
 
