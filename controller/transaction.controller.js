@@ -2,6 +2,7 @@ const moment = require('moment')
 const User = require('../model/user.model')
 const Book = require('../model/book.model')
 const History = require('../model/history.model')
+const { Response, codeStatus } = require('../config/response')
 
 const DateUse = moment().format()
 
@@ -32,14 +33,14 @@ exports.rent = async (req, res) => {
     } = req.body
     const user = await User.findOne({ role: 'USER' }).lean()
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(400).json({ data: 'Please try again' })
+      return res.status(codeStatus.Failed).json({ data: 'Please try again' })
     }
     const book = await Book.findOne({ idBook, status: 'Avaliable' }).lean()
     if (!(user)) {
-      return res.status(400).json({ data: 'Please try again, Username not found or you not USER' })
+      return res.status(codeStatus.Failed).json({ data: 'Please try again, Username not found or you not USER' })
     }
     if (!(book)) {
-      return res.status(400).json({ data: 'Please try again, Book not already for rent' })
+      return res.status(codeStatus.Failed).json({ data: 'Please try again, Book not already for rent' })
     }
     const currentBookRent = await History.find({ username, status: 'Rent' }).lean()
     // ถ้ายืม id นี้แล้ว ไม่ให้ยืมซ้ำ
@@ -47,11 +48,11 @@ exports.rent = async (req, res) => {
       const _currentBookRent = currentBookRent.find((v) => v.idBook === idBook)
       const __currentBookRent = currentBookRent.find((v) => v.bookName === book.bookName)
       if (_currentBookRent && __currentBookRent) {
-        return res.status(400).json({ data: 'Please try again' })
+        return res.status(codeStatus.Failed).json({ data: 'Please try again' })
       }
       console.log(currentBookRent.length)
       if (currentBookRent.length >= 5) {
-        return res.status(400).json({ data: 'Have already 5 book to rent, Please return for new rent book' })
+        return res.status(codeStatus.Failed).json({ data: 'Have already 5 book to rent, Please return for new rent book' })
       }
     }
     await Book.updateOne({
@@ -69,10 +70,10 @@ exports.rent = async (req, res) => {
       bookName: book.bookName,
       dateRent: DateUse,
     }).save()
-    return res.status(200).json(bookRent)
+    return res.status(codeStatus.Success).json(bookRent)
   } catch (e) {
     return res.status(500).json({
-      code: 100,
+      code: codeStatus.Failed,
       message: 'error',
       error: String(e),
     })
@@ -87,12 +88,12 @@ exports.return = async (req, res) => {
     const { username, idBook } = req.body
     // Check role
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(400).json({ data: 'Please try again' })
+      return res.status(codeStatus.Failed).json({ data: 'Please try again' })
     }
     // Find data
     const returnDataHistory = await History.findOne({ username, idBook, status: 'Rent' }).lean()
     if (!(returnDataHistory)) {
-      return res.status(400).json({ data: 'Please try again' })
+      return res.status(codeStatus.Failed).json({ data: 'Please try again' })
     }
     const CalculatesDate = calDate(returnDataHistory.dateRent, DateUse)
     await History.updateOne({
@@ -110,7 +111,7 @@ exports.return = async (req, res) => {
     }, {
       status: 'Avaliable',
     })
-    return res.status(200).json({ data: 'Update Done' })
+    return res.status(codeStatus.Success).json({ data: 'Update Done' })
   } catch (e) {
     return res.status(500).json({
       code: 100,
@@ -126,7 +127,7 @@ exports.transaction = async (req, res) => {
     console.log('req.body:', req.body)
     const { username, firstname, lastname } = req.body
     if (req.user.role !== 'ADMIN') {
-      return res.status(200).json({
+      return res.status(codeStatus.Success).json({
         code: 201,
         message: 'Please try again',
       })
@@ -152,7 +153,7 @@ exports.transaction = async (req, res) => {
     }
     const userData = await History.find(userHistoryobj).exec()
     // *** OUTPUT
-    return res.status(200).json({ success: true, data: userData })
+    return res.status(codeStatus.Success).json({ success: true, data: userData })
   } catch (e) {
     return res.status(500).json({
       code: 100,

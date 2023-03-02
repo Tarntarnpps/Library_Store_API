@@ -4,6 +4,7 @@ const { tokenKey } = require('../config/vars')
 
 const User = require('../model/user.model')
 const History = require('../model/history.model')
+const { Response, codeStatus } = require('../config/response')
 
 // Admin Register
 exports.register = async (req, res) => {
@@ -12,11 +13,11 @@ exports.register = async (req, res) => {
       firstname, lastname, username, password,
     } = req.body
     if (!(firstname && lastname && username && password)) {
-      return res.status(400).json({ data: 'Please try agin' })
+      return res.status(codeStatus.Failed).json({ data: 'Please try agin' })
     }
     const oldUser = await User.findOne({ username }).lean()
     if (oldUser) {
-      return res.status(400).json({ data: 'User alredy exist. Please login' })
+      return res.status(codeStatus.Failed).json({ data: 'User alredy exist. Please login' })
     }
     // Encrypt user password
     const encryptedPassword = await bcrypt.hash(password, 10)
@@ -29,7 +30,7 @@ exports.register = async (req, res) => {
       role: 'ADMIN',
     })
     // return new user
-    return res.status(200).json({ data: user })
+    return res.status(codeStatus.Success).json({ data: user })
   } catch (e) {
     console.log(e)
   }
@@ -40,7 +41,7 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body
     if (!(username && password)) {
-      res.status(400).json({ data: 'Please try agin' })
+      res.status(codeStatus.Failed).json({ data: 'Please try agin' })
     }
     const user = await User.findOne({ username, role: 'ADMIN' }).lean()
     if (user && (await bcrypt.compare(password, user.password))) {
@@ -61,9 +62,9 @@ exports.login = async (req, res) => {
       )
       user.token = token
       await User.updateOne({ _id }, { token })
-      return res.status(200).json({ data: user })
+      return res.status(codeStatus.Success).json({ data: user })
     }
-    return res.status(400).json({ status: 'Done', data: user })
+    return res.status(codeStatus.Success).json({ status: 'Done', data: user })
   } catch (e) {
     console.log(e)
   }
@@ -77,7 +78,7 @@ exports.history = async (req, res) => {
       primaryIdBook, bookName, idBook, writer,
     } = req.body
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(400).json({ data: 'Please try again' })
+      return res.status(codeStatus.Failed).json({ data: 'Please try again' })
     }
     let bookHistoryobj = {}
     if (primaryIdBook) {
@@ -106,8 +107,8 @@ exports.history = async (req, res) => {
     }
     const bookData = await History.find(bookHistoryobj).exec()
     // *** OUTPUT
-    return res.status(200).json({ success: true, data: bookData })
+    return res.status(codeStatus.Success).json({ success: true, data: bookData })
   } catch (e) {
-    return res.status(400).json({ error: String(e) })
+    return res.status(codeStatus.Failed).json({ error: String(e) })
   }
 }
