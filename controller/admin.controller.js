@@ -62,7 +62,7 @@ exports.login = async (req, res) => {
       )
       user.token = token
       await User.updateOne({ _id }, { token })
-      return res.status(codeStatus.Success).json({ status: 'Done', data: user })
+      return res.status(codeStatus.Success).json({ data: user })
     }
     return res.status(codeStatus.Success).json({ status: 'Done', data: user })
   } catch (e) {
