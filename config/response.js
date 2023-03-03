@@ -1,11 +1,19 @@
 const codeStatus = {
-  Success: 200,
-  Failed: 400,
+  AllReqDone: 0,
+  AllReqFailed: 400,
+}
+
+const httpStatus = {
+  AllReqDone: 200,
+  AllReqFailed: 400,
 }
 
 const status = (code) => {
   let res
   switch (code) {
+    case 0:
+      res = { code, message: 'Done' }
+      break
     case 200:
       res = { code, message: 'Done' }
       break
@@ -27,4 +35,5 @@ const Response = (code, data = {}) => (
 module.exports = {
   Response,
   codeStatus,
+  httpStatus,
 }

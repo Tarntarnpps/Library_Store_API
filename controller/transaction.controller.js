@@ -2,7 +2,7 @@ const moment = require('moment')
 const User = require('../model/user.model')
 const Book = require('../model/book.model')
 const History = require('../model/history.model')
-const { Response, codeStatus } = require('../config/response')
+const { Response, codeStatus, httpStatus } = require('../config/response')
 
 const DateUse = moment().format()
 
@@ -33,14 +33,14 @@ exports.rent = async (req, res) => {
     } = req.body
     const user = await User.findOne({ role: 'USER' }).lean()
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(codeStatus.Failed).json({ data: Response })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     const book = await Book.findOne({ idBook, status: 'Avaliable' }).lean()
     if (!(user)) {
-      return res.status(codeStatus.Failed).json({ data: Response })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     if (!(book)) {
-      return res.status(codeStatus.Failed).json({ data: Response })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     const currentBookRent = await History.find({ username, status: 'Rent' }).lean()
     // ถ้ายืม id นี้แล้ว ไม่ให้ยืมซ้ำ
@@ -48,11 +48,11 @@ exports.rent = async (req, res) => {
       const _currentBookRent = currentBookRent.find((v) => v.idBook === idBook)
       const __currentBookRent = currentBookRent.find((v) => v.bookName === book.bookName)
       if (_currentBookRent && __currentBookRent) {
-        return res.status(codeStatus.Failed).json({ data: Response })
+        return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
       }
       console.log(currentBookRent.length)
       if (currentBookRent.length >= 5) {
-        return res.status(codeStatus.Failed).json({ data: Response })
+        return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
       }
     }
     await Book.updateOne({
@@ -70,7 +70,7 @@ exports.rent = async (req, res) => {
       bookName: book.bookName,
       dateRent: DateUse,
     }).save()
-    return res.status(codeStatus.Success).json(bookRent)
+    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: bookRent })
   } catch (e) {
     return res.status(codeStatus.Failed).json({
       code: 400,
@@ -88,12 +88,12 @@ exports.return = async (req, res) => {
     const { username, idBook } = req.body
     // Check role
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(codeStatus.Failed).json({ data: Response })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     // Find data
     const returnDataHistory = await History.findOne({ username, idBook, status: 'Rent' }).lean()
     if (!(returnDataHistory)) {
-      return res.status(codeStatus.Failed).json({ data: Response })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     const CalculatesDate = calDate(returnDataHistory.dateRent, DateUse)
     await History.updateOne({
@@ -111,7 +111,7 @@ exports.return = async (req, res) => {
     }, {
       status: 'Avaliable',
     })
-    return res.status(codeStatus.Success).json({ data: Response })
+    return res.status(codeStatus.Success).json(codeStatus.AllReqDone)
   } catch (e) {
     return res.status(500).json({
       code: 100,
@@ -153,7 +153,7 @@ exports.transaction = async (req, res) => {
     }
     const userData = await History.find(userHistoryobj).exec()
     // *** OUTPUT
-    return res.status(codeStatus.Success).json({ success: true, data: userData })
+    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: userData })
   } catch (e) {
     return res.status(500).json({
       code: 100,

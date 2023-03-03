@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken')
 const { tokenKey } = require('../config/vars')
 const User = require('../model/user.model')
 const History = require('../model/history.model')
-const { Response, codeStatus } = require('../config/response')
+const { Response, codeStatus, httpStatus } = require('../config/response')
 
 const app = express()
 app.use(express.json())
@@ -17,11 +17,11 @@ exports.register = async (req, res) => {
       firstname, lastname, username, password,
     } = req.body
     if (!(firstname && lastname && username && password)) {
-      return res.status(codeStatus.Failed).json({ data: 'All required' })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     const oldUser = await User.findOne({ username }).lean()
     if (oldUser) {
-      return res.status(codeStatus.Failed).json({ data: 'User alredy exist. Please login' })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     // Encrypt user password
     const encryptedPassword = await bcrypt.hash(password, 10)
@@ -34,7 +34,7 @@ exports.register = async (req, res) => {
       role: 'USER',
     })
     // return new user
-    res.status(codeStatus.Success).json({ data: user })
+    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: user })
   } catch (e) {
     console.log(e)
   }
@@ -45,7 +45,7 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body
     if (!(username && password)) {
-      return res.status(codeStatus.Failed).json({ data: Response })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     const user = await User.findOne({ username, role: 'USER' }).lean()
     if (user && (await bcrypt.compare(password, user.password))) {
@@ -66,7 +66,7 @@ exports.login = async (req, res) => {
       )
       user.token = token
       await User.updateOne({ _id }, { token })
-      return res.status(codeStatus.Success).json({ status: 'Done', data: user })
+      return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: user })
     }
     return res.status.json({ status: 'Done', data: user })
   } catch (e) {
@@ -81,7 +81,7 @@ exports.history = async (req, res) => {
     const { username, firstname, lastname } = req.body
     console.log(req.user)
     if (!req.user || (req.user.role !== 'USER')) {
-      return res.status(codeStatus.Failed).json({ data: Response })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     let userHistoryobj = {}
     if (username) {
@@ -104,7 +104,7 @@ exports.history = async (req, res) => {
     }
     const userData = await History.find(userHistoryobj).exec()
     // *** OUTPUT
-    return res.status(codeStatus.Success).json({ success: true, data: userData })
+    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: userData })
   } catch (e) {
     return res.status(codeStatus.Failed).json({ error: String(e) })
   }

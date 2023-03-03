@@ -1,7 +1,7 @@
 const moment = require('moment')
 
 const Book = require('../model/book.model')
-const { Response, codeStatus } = require('../config/response')
+const { Response, codeStatus, httpStatus } = require('../config/response')
 
 // Registration book
 exports.register = async (req, res) => {
@@ -20,16 +20,16 @@ exports.register = async (req, res) => {
 
     // add ข้อมูลหนังสือต่่างๆ ถ้ายังไม่มีของเดิม
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(codeStatus.Failed).json({ data: Response })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     if (!(primaryIdBook && idBook)) {
-      return res.status(codeStatus.Failed).json({ data: Response })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     const bookOldCheck = await Book.find({ primaryIdBook }).lean()
     if (bookOldCheck.length > 0) {
       const oldBook = bookOldCheck.find((v) => v.idBook === idBook)
       if (oldBook) {
-        return res.status(codeStatus.Failed).json({ data: Response })
+        return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
       }
       const _bookOldCheck = bookOldCheck[0]
       const book = await new Book({
@@ -41,10 +41,10 @@ exports.register = async (req, res) => {
         publisher: _bookOldCheck.publisher,
         catagory: _bookOldCheck.catagory,
       }).save()
-      return res.status(codeStatus.Success).json({ status: 'done', data: book })
+      return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: book })
     }
     if (!(bookName && writer && publisher && catagory)) {
-      return res.status(codeStatus.Failed).json({ data: 'All required' })
+      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
     const bookNew = await new Book({
       primaryIdBook,
@@ -55,10 +55,10 @@ exports.register = async (req, res) => {
       publisher,
       catagory,
     }).save()
-    return res.status(codeStatus.Success).json({ status: 'done', data: bookNew }) // Response message
+    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: bookNew })
   } catch (e) {
     console.log(e)
-    return res.status(codeStatus.Failed).json({ data: Response }) // Response message
+    return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
   }
 }
 
@@ -96,7 +96,7 @@ exports.data = async (req, res) => {
     }
     const bookData = await Book.find(bookHistoryobj).exec()
     // *** OUTPUT
-    return res.status(codeStatus.Success).json({ success: true, data: bookData })
+    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: bookData })
   } catch (e) {
     return res.status(codeStatus.Failed).json({ error: String(e) })
   }
