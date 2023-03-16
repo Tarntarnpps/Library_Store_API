@@ -66,7 +66,7 @@ exports.login = async (req, res) => {
       )
       user.token = token
       await User.updateOne({ _id }, { token })
-      return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: user })
+      return res.status(codeStatus.AllReqDone).json(Response(codeStatus.AllReqDone, { data: user }))
     }
     return res.status.json({ status: 'Done', data: user })
   } catch (e) {
@@ -104,8 +104,8 @@ exports.history = async (req, res) => {
     }
     const userData = await History.find(userHistoryobj).exec()
     // *** OUTPUT
-    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: userData })
+    return res.status(codeStatus.AllReqDone).json(codeStatus.AllReqDone, { data: userData })
   } catch (e) {
-    return res.status(codeStatus.Failed).json({ error: String(e) })
+    return res.status(codeStatus.AllReqFailed).json({ error: String(e) })
   }
 }

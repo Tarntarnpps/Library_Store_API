@@ -34,7 +34,7 @@ const optional = async (req, res, next) => {
     if (!authOptionnal) throw 'wrong token'
     req.user = decoded
   } catch (e) {
-    return res.status(codeStatus.Failed).json({ data: 'Invalid Token' })
+    return res.status(codeStatus.AllReqFailed).json({ data: 'Invalid Token' })
   }
   return next()
 }

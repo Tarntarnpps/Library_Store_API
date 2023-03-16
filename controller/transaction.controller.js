@@ -24,55 +24,161 @@ const d = calDate(date1, date2)
 console.log(d)
 
 // Rent
+// exports.rent = async (req, res) => {
+//   try {
+//     console.log('req.body:', req.body)
+//     const {
+//       username,
+//       idBooks,
+//     } = req.body
+//     // [1,2,3,4,5]
+//     /*
+//     *** old
+//     check codition
+//     if(success) {
+//       save
+//       return res.status(codeStatus.AllReqDone).json(codeStatus.AllReqDone, { data: ***})
+//     }
+//     else{
+//       return falied
+//     }
+//     *** new
+//       for(i=0 ; i<=idBooks ; i++){
+//        const idBook = idBooks[i]
+//         // check condition
+//         if(success) {
+//         }
+//          save => return success
+//         else {
+//           return res.status(codeStatus.AllReqFailed).json(Response(httpStatus.AllReqFailed))
+//         }
+//       }
+//     */
+//     for (let index = 0; index < array.length; index++) {
+//       const element = array[index]
+//     }
+//     const user = await User.findOne({ username, role: 'USER' }).lean()
+//     if (!req.user || (req.user.role !== 'ADMIN')) {
+//       return res.status(codeStatus.AllReqFailed).json(Response(httpStatus.AllReqFailed))
+//     }
+//     if (!(user)) {
+//       return res.status(codeStatus.AllReqFailed).json(Response(httpStatus.AllReqFailed))
+//     }
+//     const book = await Book.findOne({ idBook, status: 'Avaliable' }).lean()
+//     if (!(book)) {
+//       return res.status(codeStatus.AllReqFailed).json(Response(httpStatus.AllReqFailed))
+//     }
+//     const currentBookRent = await History.find({ username, status: 'Rent' }).lean()
+//     // ถ้ายืม id นี้แล้ว ไม่ให้ยืมซ้ำ
+//     if (currentBookRent != null && currentBookRent.length > 0) {
+//       const _currentBookRent = currentBookRent.find((v) => v.idBook === idBook)
+//       const __currentBookRent = currentBookRent.find((v) => v.bookName === book.bookName)
+//       if (_currentBookRent && __currentBookRent) {
+//         return res.status(codeStatus.AllReqFailed).json(Response(httpStatus.AllReqFailed))
+//       }
+//       console.log(currentBookRent.length)
+//       if (currentBookRent.length >= 5) {
+//         return res.status(codeStatus.AllReqFailed).json(Response(httpStatus.AllReqFailed))
+//       }
+//       // if (currentBookRent.length <= 5) {
+//       //   console.log(currentBookRent.length)
+//       // }
+//     }
+//     await Book.updateOne({
+//       idBook,
+//       status: 'Avaliable',
+//     }, {
+//       status: 'Rent',
+//     })
+//     const bookRent = await new History({
+//       firstname: user.firstname,
+//       lastname: user.lastname,
+//       username: user.username,
+//       primaryIdBook: book.primaryIdBook,
+//       idBook: book.idBook,
+//       bookName: book.bookName,
+//       dateRent: DateUse,
+//     }).save()
+//     return res.status(codeStatus.AllReqDone).json(codeStatus.AllReqDone, { data: bookRent })
+//   } catch (e) {
+//     return res.status(codeStatus.AllReqFailed).json({
+//       code: 400,
+//       message: 'error',
+//       error: String(e),
+//     })
+//   }
+// }
+
 exports.rent = async (req, res) => {
   try {
     console.log('req.body:', req.body)
     const {
       username,
-      idBook,
+      idBooks,
     } = req.body
-    const user = await User.findOne({ role: 'USER' }).lean()
+    // check admin before save
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+      return res.status(codeStatus.AdminReqFailed).json(Response(httpStatus.AdminReqFailed))
     }
-    const book = await Book.findOne({ idBook, status: 'Avaliable' }).lean()
+    // let bookRentData = {}
+    // if (username) {
+    //   bookRentData = {
+    //     ...bookRentData,
+    //     username,
+    //   }
+    // }
+    // if (idBooks) {
+    //   bookRentData = {
+    //     ...bookRentData,
+    //     idBooks,
+    //   }
+    // }
+
+    // check user role before save
+    const user = await User.findOne({ role: 'USER', username }).lean()
     if (!(user)) {
-      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+      return res.status(codeStatus.UserReqFailed).json(Response(httpStatus.UserReqFailed))
     }
-    if (!(book)) {
-      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+    // const bookRent = []
+
+    const book = await Book.find({ idBook: { $in: idBooks, status: 'Avaliable' } }).lean()
+    if (book.length === 0) {
+      return res.status(codeStatus.BookReqFailed).json(Response(httpStatus.BookReqFailed))
     }
     const currentBookRent = await History.find({ username, status: 'Rent' }).lean()
-    // ถ้ายืม id นี้แล้ว ไม่ให้ยืมซ้ำ
-    if (currentBookRent != null && currentBookRent.length > 0) {
-      const _currentBookRent = currentBookRent.find((v) => v.idBook === idBook)
-      const __currentBookRent = currentBookRent.find((v) => v.bookName === book.bookName)
-      if (_currentBookRent && __currentBookRent) {
-        return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
-      }
-      console.log(currentBookRent.length)
-      if (currentBookRent.length >= 5) {
-        return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
-      }
+    if (currentBookRent.length >= 5) {
+      return res.status(codeStatus.HistoryReqFailed).json(Response(httpStatus.HistoryReqFailed))
     }
-    await Book.updateOne({
-      idBook,
-      status: 'Avaliable',
-    }, {
-      status: 'Rent',
-    })
-    const bookRent = await new History({
-      firstname: user.firstname,
-      lastname: user.lastname,
-      username: user.username,
-      primaryIdBook: book.primaryIdBook,
-      idBook: book.idBook,
-      bookName: book.bookName,
-      dateRent: DateUse,
-    }).save()
-    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: bookRent })
+    for (let i = 0; i < book.length; i += 1) {
+      const _book = book[i]
+      if (currentBookRent != null && currentBookRent.length > 0) {
+        const _currentBookRent = currentBookRent.find((v) => v.idBook === _book.idBook)
+        const __currentBookRent = _currentBookRent.find((v) => v.bookName === _book.bookName)
+        if (_currentBookRent && __currentBookRent) {
+          return res.status(codeStatus.Failed).json(Response(httpStatus.Failed))
+        }
+      }
+      await Book.updateOne({
+        idBooks,
+        status: 'Avaliable',
+      }, {
+        status: 'Rent',
+      })
+      const bookRent = await new History({
+        firstname: user.firstname,
+        lastname: user.lastname,
+        username: user.username,
+        primaryIdBook: book.primaryIdBook,
+        idBook: book.idBook,
+        bookName: book.bookName,
+        dateRent: DateUse,
+      }).save()
+      // eslint-disable-next-line max-len
+      return res.status(codeStatus.AllReqDone).json(Response(codeStatus.AllReqDone, { data: bookRent }))
+    }
   } catch (e) {
-    return res.status(codeStatus.Failed).json({
+    console.log(e)
+    return res.status(httpStatus.AllReqFailed).json({
       code: 400,
       message: 'error',
       error: String(e),

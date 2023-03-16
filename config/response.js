@@ -1,6 +1,11 @@
 const codeStatus = {
-  AllReqDone: 0,
+  AllReqDone: 200,
   AllReqFailed: 400,
+  AdminReqFailed: 401,
+  UserReqFailed: 402,
+  BookReqFailed: 403,
+  HistoryReqFailed: 405,
+  Failed: 406,
 }
 
 const httpStatus = {
@@ -19,6 +24,21 @@ const status = (code) => {
       break
     case 400:
       res = { code, message: 'Failed' }
+      break
+    case 401:
+      res = { code, message: 'Req ADMIN Failed' }
+      break
+    case 402:
+      res = { code, message: 'Req USER Failed' }
+      break
+    case 403:
+      res = { code, message: 'Req Book Failed' }
+      break
+    case 405:
+      res = { code, message: 'Req History Failed' }
+      break
+    case 406:
+      res = { code, message: 'Req Failed' }
       break
     default: break
   }
