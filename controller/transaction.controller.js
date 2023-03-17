@@ -161,8 +161,8 @@ exports.rent = async (req, res) => {
         firstname: user.firstname,
         lastname: user.lastname,
         username: user.username,
-        primaryIdBook: book.primaryIdBook,
-        idBook: book.idBook,
+        primaryIdBook: _book.primaryIdBook,
+        idBook: _book.idBook,
         bookName: book.bookName,
         dateRent: DateUse,
       }).save()
@@ -171,7 +171,6 @@ exports.rent = async (req, res) => {
         bookRent,
       ]
     }
-    console.log('CCCCCCCCCC')
     // eslint-disable-next-line max-len
     return res.status(codeStatus.AllReqDone).json(Response(codeStatus.AllReqDone, { data: bookRents }))
   } catch (e) {
