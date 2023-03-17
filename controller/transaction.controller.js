@@ -120,30 +120,15 @@ exports.rent = async (req, res) => {
     if (!req.user || (req.user.role !== 'ADMIN')) {
       return res.status(codeStatus.AdminReqFailed).json(Response(httpStatus.AdminReqFailed))
     }
-    // let bookRentData = {}
-    // if (username) {
-    //   bookRentData = {
-    //     ...bookRentData,
-    //     username,
-    //   }
-    // }
-    // if (idBooks) {
-    //   bookRentData = {
-    //     ...bookRentData,
-    //     idBooks,
-    //   }
-    // }
-
+    let bookRents = []
     // check user role before save
     const user = await User.findOne({ role: 'USER', username }).lean()
     if (!(user)) {
       return res.status(codeStatus.UserReqFailed).json(Response(httpStatus.UserReqFailed))
     }
-    // const bookRent = []
-
-    const book = await Book.find({ idBook: { $in: idBooks, status: 'Avaliable' } }).lean()
+    const book = await Book.find({ idBook: { $in: idBooks }, status: 'Avaliable' }).lean()
     if (book.length === 0) {
-      return res.status(codeStatus.BookReqFailed).json(Response(httpStatus.BookReqFailed))
+      return res.status(httpStatus.BookReqFailed).json(Response(codeStatus.BookReqFailed))
     }
     const currentBookRent = await History.find({ username, status: 'Rent' }).lean()
     if (currentBookRent.length >= 5) {
@@ -153,10 +138,18 @@ exports.rent = async (req, res) => {
       const _book = book[i]
       if (currentBookRent != null && currentBookRent.length > 0) {
         const _currentBookRent = currentBookRent.find((v) => v.idBook === _book.idBook)
-        const __currentBookRent = _currentBookRent.find((v) => v.bookName === _book.bookName)
+        const __currentBookRent = currentBookRent.find((v) => v.bookName === _book.bookName)
         if (_currentBookRent && __currentBookRent) {
-          return res.status(codeStatus.Failed).json(Response(httpStatus.Failed))
+          return res.status(httpStatus.Failed).json(Response(codeStatus.Failed))
         }
+      }
+      const currentBookRentCount = currentBookRent.length
+      if (currentBookRentCount === 5) {
+        return res.status(httpStatus.Failed).json(Response(codeStatus.Failed))
+      }
+      const bookCount = book.length
+      if (bookCount === 2) {
+        return res.status(httpStatus.Failed).json(Response(codeStatus.Faile))
       }
       await Book.updateOne({
         idBooks,
@@ -173,9 +166,14 @@ exports.rent = async (req, res) => {
         bookName: book.bookName,
         dateRent: DateUse,
       }).save()
-      // eslint-disable-next-line max-len
-      return res.status(codeStatus.AllReqDone).json(Response(codeStatus.AllReqDone, { data: bookRent }))
+      bookRents = [
+        ...bookRents,
+        bookRent,
+      ]
     }
+    console.log('CCCCCCCCCC')
+    // eslint-disable-next-line max-len
+    return res.status(codeStatus.AllReqDone).json(Response(codeStatus.AllReqDone, { data: bookRents }))
   } catch (e) {
     console.log(e)
     return res.status(httpStatus.AllReqFailed).json({
