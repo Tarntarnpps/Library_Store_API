@@ -35,7 +35,7 @@ const status = (code) => {
       res = { code, message: 'Req Book Failed' }
       break
     case 405:
-      res = { code, message: 'Req History Failed' }
+      res = { code, message: 'You rent total 5 books, Pls return before rent' }
       break
     case 406:
       res = { code, message: 'Req Failed' }

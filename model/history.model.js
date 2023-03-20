@@ -1,8 +1,13 @@
+/* eslint-disable import/no-extraneous-dependencies */
+const { customAlphabet } = require('nanoid/async')
+
 const moment = require('moment')
 const mongoose = require('../config/database')
 
 const DateUse = moment().format()
 const statusUser = ['Rent', 'Finish']
+const nanoid = customAlphabet('1234567890', 5)
+const randomNumber = `ADS ${nanoid}, ${DateUse}!`
 
 const historySchema = mongoose.Schema({
   firstname: { type: String },
@@ -15,6 +20,7 @@ const historySchema = mongoose.Schema({
   dateRent: { type: Date, require: true, default: DateUse },
   dateEnd: { type: Date },
   penalty: { type: Number, default: 0 },
+  transactionId: { type: String, defaul: randomNumber },
 })
 
 module.exports = mongoose.model('historyData', historySchema)
