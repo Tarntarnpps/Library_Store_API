@@ -17,9 +17,7 @@ const randomNumber = `ADS${_nanoid}, ${DateUse}!`
 
 const calDate = ({ date1, date2 }) => {
   const startDate = date1
-  console.log(startDate)
   const endDate = date2
-  console.log(endDate)
   const diffDate = Math.floor((endDate - startDate) / (24 * 3600 * 1000))
   if (diffDate <= 3) {
     return 0
@@ -114,45 +112,50 @@ exports.return = async (req, res) => {
   try {
     console.log('req.body:', req.body)
     // Input
-    const { username, idBooks } = req.body
+    const {
+      username,
+      idBooks,
+    } = req.body
     // Check role
     if (!req.user || (req.user.role !== 'ADMIN')) {
       return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed))
     }
-    console.log('oooooooo')
-    // Find data
-    const returnDataHistory = await History.find({ username, idBooks, status: 'Rent' }).lean()
-    if (!(returnDataHistory)) {
-      return res.status(httpStatus.Failed).json(Response(codeStatus.HistoryReqFailed, { data: ' ' }))
+    if (idBooks.length > 5) {
+      return res.status(httpStatus.Failed).json(Response(codeStatus.HistoryReqFailed, { data: ' test' }))
     }
-    // const book = await Book.find({ idBook: { $in: idBooks }, status: 'Rent' }).lean()
-    // if (!book) {
-    //   return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.BookReqFailed, { data: '' }))
-    // }
-    console.log('uuuuuuuuuuuu')
-    // Check
-    const CalculatesDate = calDate({
-      date1: returnDataHistory.dateRent,
-      date2: DateUse,
-    })
-    await History.updateOne({
-      username,
-      idBooks,
-      status: 'Rent',
-    }, {
-      dateEnd: DateUse,
-      penalty: CalculatesDate.calDate,
-      status: 'Finish',
-    })
-    console.log('yyyyyyyyyy')
-    await Book.updateOne({
-      idBooks,
-      status: 'Rent',
-    }, {
-      status: 'Avaliable',
-    })
-    console.log('kkkkkkkkkk')
-    return res.status(httpStatus.AllReqDone).json(codeStatus.AllReqDone)
+    // Find data that still not return
+    const returnDataHistory = await History.find({ username, idBook: { $in: idBooks }, status: 'Rent' }).lean()
+    if (returnDataHistory.length < 1) {
+      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, { data: ' test' }))
+    }
+    for (let i = 0; i < returnDataHistory.length; i += 1) {
+      const returnHistory = returnDataHistory[i]
+      // Check
+      const CalculatesDate = calDate({
+        date1: returnHistory.dateRent,
+        date2: DateUse,
+      })
+      await History.updateOne({
+        username,
+        idBook: returnHistory.idBook,
+        status: 'Rent',
+      }, {
+        dateEnd: DateUse,
+        penalty: CalculatesDate.calDate,
+        status: 'Finish',
+      })
+      await Book.updateOne({
+        idBook: returnHistory.idBook,
+        status: 'Rent',
+      }, {
+        status: 'Avaliable',
+      })
+      console.log(returnHistory.transactionId)
+      return res.status(httpStatus.AllReqDone).json({
+        data: returnHistory.transactionId,
+      })
+    }
+    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone, { data: 'Done' }))
   } catch (e) {
     return res.status(httpStatus.AllReqFailed).json({
       code: 400,
