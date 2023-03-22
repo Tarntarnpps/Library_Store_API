@@ -11,9 +11,9 @@ const { Response, codeStatus, httpStatus } = require('../config/response')
 // const nanoId = require('nano-id')
 
 const DateUse = moment().format()
-const nanoid = customAlphabet('1234567890abcdef', 10)
-const _nanoid = nanoid(5)
-const randomNumber = `ADS${_nanoid}, ${DateUse}!`
+const nanoid = customAlphabet('1234567890abcdefghijk', 10)
+const _nanoid = nanoid(8)
+const randomNumber = `ADS${_nanoid}`
 
 const calDate = ({ date1, date2 }) => {
   const startDate = date1
@@ -114,17 +114,17 @@ exports.return = async (req, res) => {
     // Input
     const {
       username,
-      idBooks,
+      transactionIds,
     } = req.body
     // Check role
     if (!req.user || (req.user.role !== 'ADMIN')) {
       return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed))
     }
-    if (idBooks.length > 5) {
+    if (transactionIds.length > 5) {
       return res.status(httpStatus.Failed).json(Response(codeStatus.HistoryReqFailed, { data: ' test' }))
     }
     // Find data that still not return
-    const returnDataHistory = await History.find({ username, idBook: { $in: idBooks }, status: 'Rent' }).lean()
+    const returnDataHistory = await History.find({ username, transactionId: { $in: transactionIds }, status: 'Rent' }).lean()
     if (returnDataHistory.length < 1) {
       return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, { data: ' test' }))
     }
