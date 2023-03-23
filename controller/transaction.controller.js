@@ -1,36 +1,11 @@
-/* eslint-disable max-len */
-/* eslint-disable import/no-extraneous-dependencies */
-const { customAlphabet } = require('nanoid')
-
 const moment = require('moment')
+// const { create } = require('lodash')
 const User = require('../model/user.model')
 const Book = require('../model/book.model')
 const History = require('../model/history.model')
 const { Response, codeStatus, httpStatus } = require('../config/response')
-// const { count } = require('../model/user.model')
-// const nanoId = require('nano-id')
+const { calDate, createTransactionId } = require('../config/service')
 
-const DateUse = moment().format()
-const nanoid = customAlphabet('1234567890abcdefghijk', 10)
-const _nanoid = nanoid(8)
-const randomNumber = `ADS${_nanoid}`
-
-const calDate = ({ date1, date2 }) => {
-  const startDate = date1
-  const endDate = date2
-  const diffDate = Math.floor((endDate - startDate) / (24 * 3600 * 1000))
-  if (diffDate <= 3) {
-    return 0
-  } else {
-    return (diffDate - 3) * 20
-  }
-}
-const date1 = new Date('yyyy-mm-dd')
-const date2 = new Date('yyyy-mm-dd')
-const countDay = calDate({ date1, date2 })
-console.log(countDay)
-
-// const a = undefined.at()
 // Rent
 exports.rent = async (req, res) => {
   try {
@@ -39,61 +14,66 @@ exports.rent = async (req, res) => {
       username,
       idBooks,
     } = req.body
+    const DateUse = moment().format()
     // check admin before save
     if (!req.user || (req.user.role !== 'ADMIN')) {
       return res.status(codeStatus.AdminReqFailed).json(Response(httpStatus.AdminReqFailed))
     }
     let bookRents = []
     // check user role before save
-    const user = await User.findOne({ role: 'USER', username }).lean()
+    const user = await User.findOne({ role: 'USER', username }).select('firstname lastname').lean()
     if (!(user)) {
       return res.status(httpStatus.UserReqFailed).json(Response(codeStatus.UserReqFailed))
     }
-    const book = await Book.find({ idBook: { $in: idBooks }, status: 'Avaliable' }).lean()
+    const { firstname, lastname } = user
+    const book = await Book.find({ idBook: { $in: idBooks }, status: 'Avaliable' }).select('idBook bookName primaryIdBook').lean()
     if (book.length === 0) {
       return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.BookReqFailed, { data: 'This Book can not rent' }))
     }
-    const currentBookRent = await History.find({ username, status: 'Rent' }).lean()
+    const currentBookRent = await History.find({ username, status: 'Rent' }).select('idBook bookName').lean()
     if (currentBookRent.length >= 5) {
       return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, { data: 'You rent total 5 books, Pls return before rent' }))
     }
+    const currentRentCount = currentBookRent.length
+    const avaliableRent = 5 - currentRentCount
+    if (book.length > avaliableRent) {
+      return res.status(httpStatus.Failed).json(Response(codeStatus.Failed))
+    }
     for (let i = 0; i < book.length; i += 1) {
-      const _book = book[i]
-      if (currentBookRent != null && currentBookRent.length > 0) {
-        const _currentBookRent = currentBookRent.find((v) => v.idBook === _book.idBook)
-        const __currentBookRent = currentBookRent.find((v) => v.bookName === _book.bookName)
-        if (_currentBookRent && __currentBookRent) {
-          return res.status(httpStatus.Failed).json(Response(codeStatus.Failed))
+      const transactionId = createTransactionId()
+      const _book = book[i] // array
+      const { idBook, bookName, primaryIdBook } = _book // obj
+      const _currentBookRent = currentBookRent.find((v) => v.idBook === idBook)
+      const __currentBookRent = currentBookRent.find((v) => v.bookName === bookName)
+      if (!(_currentBookRent && __currentBookRent)) {
+        const primaryBookList = await Book.find({
+          primaryIdBook,
+          status: 'Avaliable',
+        }).lean()
+        const bookCount = primaryBookList.length
+        if (bookCount > 2) {
+          await Book.updateOne({
+            idBook,
+            status: 'Avaliable',
+          }, {
+            status: 'Rent',
+          })
+          const bookRent = await new History({
+            firstname,
+            lastname,
+            username,
+            primaryIdBook,
+            idBook,
+            bookName,
+            dateRent: DateUse,
+            transactionId,
+          }).save()
+          bookRents = [
+            ...bookRents,
+            bookRent,
+          ]
         }
       }
-      const currentBookRentCount = currentBookRent.length
-      if (currentBookRentCount === 5) {
-        return res.status(httpStatus.Failed).json(Response(codeStatus.Failed))
-      }
-      const bookCount = book.length
-      if (bookCount === 2) {
-        return res.status(httpStatus.Failed).json(Response(codeStatus.Failed))
-      }
-      await Book.updateOne({
-        idBook: _book.idBook,
-        status: 'Avaliable',
-      }, {
-        status: 'Rent',
-      })
-      const bookRent = await new History({
-        firstname: user.firstname,
-        lastname: user.lastname,
-        username: user.username,
-        primaryIdBook: _book.primaryIdBook,
-        idBook: _book.idBook,
-        bookName: book.bookName,
-        dateRent: DateUse,
-        transactionId: randomNumber,
-      }).save()
-      bookRents = [
-        ...bookRents,
-        bookRent,
-      ]
     }
     // eslint-disable-next-line max-len
     return res.status(codeStatus.AllReqDone).json(Response(codeStatus.AllReqDone, { data: bookRents }))
@@ -106,25 +86,23 @@ exports.rent = async (req, res) => {
     })
   }
 }
-
-// Return
+// Return By idBook
+// Return By transactionId
 exports.return = async (req, res) => {
   try {
     console.log('req.body:', req.body)
     // Input
     const {
       username,
-      transactionIds,
+      transactionId,
     } = req.body
+    const DateUse = moment().format()
     // Check role
     if (!req.user || (req.user.role !== 'ADMIN')) {
       return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed))
     }
-    if (transactionIds.length > 5) {
-      return res.status(httpStatus.Failed).json(Response(codeStatus.HistoryReqFailed, { data: ' test' }))
-    }
     // Find data that still not return
-    const returnDataHistory = await History.find({ username, transactionId: { $in: transactionIds }, status: 'Rent' }).lean()
+    const returnDataHistory = await History.find({ username, transactionId, status: 'Rent' }).lean()
     if (returnDataHistory.length < 1) {
       return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, { data: ' test' }))
     }
