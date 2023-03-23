@@ -108,6 +108,7 @@ exports.return = async (req, res) => {
     }
     for (let i = 0; i < returnDataHistory.length; i += 1) {
       const returnHistory = returnDataHistory[i]
+      const { idBook } = returnHistory
       // Check
       const CalculatesDate = calDate({
         date1: returnHistory.dateRent,
@@ -115,7 +116,7 @@ exports.return = async (req, res) => {
       })
       await History.updateOne({
         username,
-        idBook: returnHistory.idBook,
+        idBook,
         status: 'Rent',
       }, {
         dateEnd: DateUse,
@@ -123,7 +124,7 @@ exports.return = async (req, res) => {
         status: 'Finish',
       })
       await Book.updateOne({
-        idBook: returnHistory.idBook,
+        idBook,
         status: 'Rent',
       }, {
         status: 'Avaliable',
@@ -150,7 +151,7 @@ exports.transaction = async (req, res) => {
     const { username, firstname, lastname } = req.body
     if (req.user.role !== 'ADMIN') {
       return res.status(codeStatus.Success).json({
-        code: 201,
+        code: 200,
         message: 'Please try again',
       })
     }
@@ -177,8 +178,8 @@ exports.transaction = async (req, res) => {
     // *** OUTPUT
     return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: userData })
   } catch (e) {
-    return res.status(500).json({
-      code: 100,
+    return res.status(httpStatus.AllReqFailed).json({
+      code: 400,
       message: 'error',
       error: String(e),
     })
