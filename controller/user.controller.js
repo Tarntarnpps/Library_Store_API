@@ -14,7 +14,10 @@ app.use(express.json())
 exports.register = async (req, res) => {
   try {
     const {
-      firstname, lastname, username, password,
+      firstname,
+      lastname,
+      username,
+      password,
     } = req.body
     if (!(firstname && lastname && username && password)) {
       return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
@@ -36,14 +39,20 @@ exports.register = async (req, res) => {
     // return new user
     return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: user })
   } catch (e) {
-    console.log(e)
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.Failed,
+      {
+        error: String(e),
+      }))
   }
 }
 
 // User login
 exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body
+    const {
+      username,
+      password,
+    } = req.body
     if (!(username && password)) {
       return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
     }
@@ -66,11 +75,21 @@ exports.login = async (req, res) => {
       )
       user.token = token
       await User.updateOne({ _id }, { token })
-      return res.status(codeStatus.AllReqDone).json(Response(codeStatus.AllReqDone, { data: user }))
+      return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone,
+        {
+          data: user,
+        }))
     }
-    return res.status.json({ status: 'Done', data: user })
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed,
+      {
+        status: 'Done',
+        data: user,
+      }))
   } catch (e) {
-    console.log(e)
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.Failed,
+      {
+        error: String(e),
+      }))
   }
 }
 
@@ -78,10 +97,14 @@ exports.login = async (req, res) => {
 exports.history = async (req, res) => {
   try {
     console.log('req.body:', req.body)
-    const { username, firstname, lastname } = req.body
+    const {
+      username,
+      firstname,
+      lastname,
+    } = req.body
     console.log(req.user)
     if (!req.user || (req.user.role !== 'USER')) {
-      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+      return res.status(codeStatus.UserReqFailed).json(Response(httpStatus.UserReqFailed))
     }
     let userHistoryobj = {}
     if (username) {
@@ -104,8 +127,14 @@ exports.history = async (req, res) => {
     }
     const userData = await History.find(userHistoryobj).exec()
     // *** OUTPUT
-    return res.status(codeStatus.AllReqDone).json(codeStatus.AllReqDone, { data: userData })
+    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone,
+      {
+        data: userData,
+      }))
   } catch (e) {
-    return res.status(codeStatus.AllReqFailed).json({ error: String(e) })
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.Failed,
+      {
+        error: String(e),
+      }))
   }
 }

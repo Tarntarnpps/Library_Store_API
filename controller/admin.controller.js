@@ -10,7 +10,10 @@ const { Response, codeStatus, httpStatus } = require('../config/response')
 exports.register = async (req, res) => {
   try {
     const {
-      firstname, lastname, username, password,
+      firstname,
+      lastname,
+      username,
+      password,
     } = req.body
     if (!(firstname && lastname && username && password)) {
       return res.status(httpStatus.Failed).json(Response(httpStatus.AllReqFailed))
@@ -32,17 +35,26 @@ exports.register = async (req, res) => {
     // return new user
     return res.status(codeStatus.Success).json(Response(codeStatus.AllReqDone, { data: user }))
   } catch (e) {
-    console.log(e)
+    return res.status(httpStatus.AllReqFailed).json({
+      code: 400,
+      message: 'error',
+      error: String(e),
+    })
   }
 }
 
 // Admin login
 exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body
+    const {
+      username,
+      password,
+    } = req.body
     if (!(username && password)) {
-      res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+      console.log('jjjjj')
+      return res.status(codeStatus.PasswordFailed).json(Response(httpStatus.PasswordFailed))
     }
+    console.log('lllllllll')
     const user = await User.findOne({ username, role: 'ADMIN' }).lean()
     if (user && (await bcrypt.compare(password, user.password))) {
       const {
@@ -62,11 +74,24 @@ exports.login = async (req, res) => {
       )
       user.token = token
       await User.updateOne({ _id }, { token })
-      return res.status(httpStatus.AllReqDone).json(Response(httpStatus.AllReqDone, { data: user }))
+      console.log('kkkkkkkkkkkkk')
+      return res.status(httpStatus.AllReqDone).json(Response(httpStatus.AllReqDone,
+        {
+          data: user,
+        }))
     }
-    return res.status(codeStatus.Success).json({ status: 'Done', data: user })
+    console.log('pppppppppppppppp')
+    return res.status(httpStatus.Failed).json(Response(codeStatus.Failed,
+      {
+        status: 'Failed',
+      }))
   } catch (e) {
-    console.log(e)
+    console.log('kkkkkkkkkkkkk888888')
+    return res.status(httpStatus.AllReqFailed).json({
+      code: 400,
+      message: 'error',
+      error: String(e),
+    })
   }
 }
 
@@ -75,7 +100,10 @@ exports.history = async (req, res) => {
   try {
     console.log('req.body:', req.body)
     const {
-      primaryIdBook, bookName, idBook, writer,
+      primaryIdBook,
+      bookName,
+      idBook,
+      writer,
     } = req.body
     if (!req.user || (req.user.role !== 'ADMIN')) {
       return res.status(httpStatus.Failed).json(Response(httpStatus.AllReqFailed))
@@ -109,6 +137,10 @@ exports.history = async (req, res) => {
     // *** OUTPUT
     return res.status(codeStatus.Success).json(Response(codeStatus.AllReqDone, { data: bookData }))
   } catch (e) {
-    return res.status(codeStatus.Failed).json({ error: String(e) })
+    return res.status(httpStatus.AllReqFailed).json({
+      code: 400,
+      message: 'error',
+      error: String(e),
+    })
   }
 }

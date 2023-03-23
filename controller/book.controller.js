@@ -17,7 +17,6 @@ exports.register = async (req, res) => {
       publisher,
       catagory,
     } = req.body
-
     // add ข้อมูลหนังสือต่่างๆ ถ้ายังไม่มีของเดิม
     if (!req.user || (req.user.role !== 'ADMIN')) {
       return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
@@ -67,7 +66,10 @@ exports.data = async (req, res) => {
   try {
     console.log('req.body:', req.body)
     const {
-      primaryIdBook, bookName, idBook, writer,
+      primaryIdBook,
+      bookName,
+      idBook,
+      writer,
     } = req.body
     let bookHistoryobj = {}
     if (primaryIdBook) {
@@ -98,6 +100,10 @@ exports.data = async (req, res) => {
     // *** OUTPUT
     return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: bookData })
   } catch (e) {
-    return res.status(codeStatus.Failed).json({ error: String(e) })
+    return res.status(httpStatus.AllReqFailed).json({
+      code: 400,
+      message: 'error',
+      error: String(e),
+    })
   }
 }

@@ -6,6 +6,7 @@ const codeStatus = {
   BookReqFailed: 403,
   HistoryReqFailed: 405,
   Failed: 406,
+  PasswordFailed: 407,
 }
 
 const httpStatus = {
@@ -39,6 +40,9 @@ const status = (code) => {
       break
     case 406:
       res = { code, message: 'Req Failed' }
+      break
+    case 407:
+      res = { code, message: 'Username or Password Failed' }
       break
     default: break
   }

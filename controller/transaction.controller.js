@@ -104,8 +104,9 @@ exports.return = async (req, res) => {
     // Find data that still not return
     const returnDataHistory = await History.find({ username, transactionId, status: 'Rent' }).lean()
     if (returnDataHistory.length < 1) {
-      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, { data: ' test' }))
+      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, { data: 'Not found this transactoinID' }))
     }
+    // const returnDataHistory = returnDataHistory
     for (let i = 0; i < returnDataHistory.length; i += 1) {
       const returnHistory = returnDataHistory[i]
       const { idBook } = returnHistory
@@ -129,12 +130,10 @@ exports.return = async (req, res) => {
       }, {
         status: 'Avaliable',
       })
-      console.log(returnHistory.transactionId)
-      return res.status(httpStatus.AllReqDone).json({
-        data: returnHistory.transactionId,
-      })
     }
-    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone, { data: 'Done' }))
+    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone, {
+      data: transactionId,
+    }))
   } catch (e) {
     return res.status(httpStatus.AllReqFailed).json({
       code: 400,
@@ -148,7 +147,11 @@ exports.return = async (req, res) => {
 exports.transaction = async (req, res) => {
   try {
     console.log('req.body:', req.body)
-    const { username, firstname, lastname } = req.body
+    const {
+      username,
+      firstname,
+      lastname,
+    } = req.body
     if (req.user.role !== 'ADMIN') {
       return res.status(codeStatus.Success).json({
         code: 200,
