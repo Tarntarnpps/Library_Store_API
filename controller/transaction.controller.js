@@ -172,11 +172,11 @@ exports.transaction = async (req, res) => {
       dateRent,
       dateEnd,
     } = req.body
-    if (req.user.role !== 'ADMIN') {
-      return res.status(httpStatus.AllReqFailed).json({
-        code: 400,
-        message: 'Please try again',
-      })
+    if (!req.user || (req.user.role !== 'ADMIN')) {
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed),
+        {
+          data: 'Req ADMIN Failed',
+        })
     }
     let userHistoryobj = {}
     if (username) {
