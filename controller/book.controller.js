@@ -19,16 +19,22 @@ exports.register = async (req, res) => {
     } = req.body
     // add ข้อมูลหนังสือต่่างๆ ถ้ายังไม่มีของเดิม
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed),
+        {
+          data: 'You not Admin',
+        })
     }
     if (!(primaryIdBook && idBook)) {
-      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
     }
     const bookOldCheck = await Book.find({ primaryIdBook }).lean()
     if (bookOldCheck.length > 0) {
       const oldBook = bookOldCheck.find((v) => v.idBook === idBook)
       if (oldBook) {
-        return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+        return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.BookAlreadyInSystem),
+          {
+            data: 'Book Alredy in system',
+          })
       }
       const _bookOldCheck = bookOldCheck[0]
       const book = await new Book({
@@ -40,7 +46,11 @@ exports.register = async (req, res) => {
         publisher: _bookOldCheck.publisher,
         catagory: _bookOldCheck.catagory,
       }).save()
-      return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: book })
+      return res.status(httpStatus.AllReqDone).json(codeStatus.BookRegisterSuccess,
+        {
+          data: book,
+          message: 'Book Register Success',
+        })
     }
     if (!(bookName && writer && publisher && catagory)) {
       return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
@@ -54,10 +64,17 @@ exports.register = async (req, res) => {
       publisher,
       catagory,
     }).save()
-    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: bookNew })
+    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.BookRegisterSuccess,
+      {
+        data: bookNew,
+        message: 'Register New Book Success',
+      }))
   } catch (e) {
-    console.log(e)
-    return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+    return res.status(httpStatus.AllReqFailed).json({
+      code: 400,
+      message: 'error',
+      error: String(e),
+    })
   }
 }
 
@@ -98,7 +115,10 @@ exports.data = async (req, res) => {
     }
     const bookData = await Book.find(bookHistoryobj).exec()
     // *** OUTPUT
-    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: bookData })
+    return res.status(codeStatus.Success).json(Response(codeStatus.AllReqDone,
+      {
+        data: bookData,
+      }))
   } catch (e) {
     return res.status(httpStatus.AllReqFailed).json({
       code: 400,

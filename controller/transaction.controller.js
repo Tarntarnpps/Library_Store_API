@@ -17,27 +17,42 @@ exports.rent = async (req, res) => {
     const DateUse = moment().format()
     // check admin before save
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(codeStatus.AdminReqFailed).json(Response(httpStatus.AdminReqFailed))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed),
+        {
+          data: 'Req ADMIN Failed',
+        })
     }
     let bookRents = []
     // check user role before save
     const user = await User.findOne({ role: 'USER', username }).select('firstname lastname').lean()
     if (!(user)) {
-      return res.status(httpStatus.UserReqFailed).json(Response(codeStatus.UserReqFailed))
+      return res.status(httpStatus.UserReqFailed).json(Response(codeStatus.UserReqFailed),
+        {
+          data: 'Req USER Failed',
+        })
     }
     const { firstname, lastname } = user
     const book = await Book.find({ idBook: { $in: idBooks }, status: 'Avaliable' }).select('idBook bookName primaryIdBook').lean()
     if (book.length === 0) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.BookReqFailed, { data: 'This Book can not rent' }))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.BookReqFailed,
+        {
+          data: 'Req Book Failed, B/C not Avaliable',
+        }))
     }
     const currentBookRent = await History.find({ username, status: 'Rent' }).select('idBook bookName').lean()
     if (currentBookRent.length >= 5) {
-      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, { data: 'You rent total 5 books, Pls return before rent' }))
+      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed,
+        {
+          data: 'User Rent total 5 books',
+        }))
     }
     const currentRentCount = currentBookRent.length
     const avaliableRent = 5 - currentRentCount
     if (book.length > avaliableRent) {
-      return res.status(httpStatus.Failed).json(Response(codeStatus.Failed))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.BookRentNotAvaliable,
+        {
+          data: 'Can not rent',
+        }))
     }
     for (let i = 0; i < book.length; i += 1) {
       const transactionId = createTransactionId()
@@ -76,7 +91,10 @@ exports.rent = async (req, res) => {
       }
     }
     // eslint-disable-next-line max-len
-    return res.status(codeStatus.AllReqDone).json(Response(codeStatus.AllReqDone, { data: bookRents }))
+    return res.status(codeStatus.AllReqDone).json(Response(codeStatus.AllReqDone,
+      {
+        data: bookRents,
+      }))
   } catch (e) {
     console.log(e)
     return res.status(httpStatus.AllReqFailed).json({
@@ -153,8 +171,8 @@ exports.transaction = async (req, res) => {
       lastname,
     } = req.body
     if (req.user.role !== 'ADMIN') {
-      return res.status(codeStatus.Success).json({
-        code: 200,
+      return res.status(httpStatus.Success).json({
+        code: 400,
         message: 'Please try again',
       })
     }
