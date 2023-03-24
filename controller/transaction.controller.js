@@ -169,6 +169,8 @@ exports.transaction = async (req, res) => {
       username,
       firstname,
       lastname,
+      dateRent,
+      dateEnd,
     } = req.body
     if (req.user.role !== 'ADMIN') {
       return res.status(httpStatus.AllReqFailed).json({
@@ -195,9 +197,24 @@ exports.transaction = async (req, res) => {
         lastname,
       }
     }
+    if (dateRent) {
+      userHistoryobj = {
+        ...userHistoryobj,
+        dateRent,
+      }
+    }
+    if (dateEnd) {
+      userHistoryobj = {
+        ...userHistoryobj,
+        dateEnd,
+      }
+    }
     const userData = await History.find(userHistoryobj).exec()
     // *** OUTPUT
-    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: userData })
+    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone,
+      {
+        data: userData,
+      }))
   } catch (e) {
     return res.status(httpStatus.AllReqFailed).json({
       code: 400,
