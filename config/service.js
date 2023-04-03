@@ -19,11 +19,6 @@ const createTransactionId = () => {
   return randomNumber
 }
 
-// const date1 = new Date('yyyy-mm-dd')
-// const date2 = new Date('yyyy-mm-dd')
-// const countDay = calDate({ date1, date2 })
-// console.log(countDay)
-
 module.exports = {
   calDate,
   createTransactionId,

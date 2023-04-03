@@ -60,10 +60,10 @@ exports.login = async (req, res) => {
       password,
     } = req.body
     if (!(username && password)) {
-      console.log('jjjjj')
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.PasswordFailed))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.PasswordFailed), {
+        data: 'Data not match',
+      })
     }
-    console.log('lllllllll')
     const user = await User.findOne({ username, role: 'ADMIN' }).lean()
     if (user && (await bcrypt.compare(password, user.password))) {
       const {
@@ -83,19 +83,16 @@ exports.login = async (req, res) => {
       )
       user.token = token
       await User.updateOne({ _id }, { token })
-      console.log('kkkkkkkkkkkkk')
       return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AdminLoginSuccess,
         {
           data: user,
         }))
     }
-    console.log('pppppppppppppppp')
     return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed,
       {
         status: 'Failed',
       }))
   } catch (e) {
-    console.log('kkkkkkkkkkkkk888888')
     return res.status(httpStatus.AllReqFailed).json({
       code: 400,
       message: 'error',
@@ -115,7 +112,9 @@ exports.history = async (req, res) => {
       writer,
     } = req.body
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed), {
+        data: 'Data not match or User not ADMIN',
+      })
     }
     let bookHistoryobj = {}
     if (primaryIdBook) {

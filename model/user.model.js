@@ -1,7 +1,7 @@
 const moment = require('moment')
 const mongoose = require('../config/database')
 
-const DateUse = moment().format()
+const DateUse = moment().format('L')
 const roleUser = ['ADMIN', 'USER']
 
 const usersSchema = mongoose.Schema({

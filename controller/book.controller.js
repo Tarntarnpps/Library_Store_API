@@ -21,11 +21,13 @@ exports.register = async (req, res) => {
     if (!req.user || (req.user.role !== 'ADMIN')) {
       return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed),
         {
-          data: 'You not Admin',
+          data: 'User not Admin',
         })
     }
     if (!(primaryIdBook && idBook)) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
+        data: 'Data not match',
+      })
     }
     const bookOldCheck = await Book.find({ primaryIdBook }).lean()
     if (bookOldCheck.length > 0) {
@@ -53,7 +55,9 @@ exports.register = async (req, res) => {
         })
     }
     if (!(bookName && writer && publisher && catagory)) {
-      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+      return res.status(httpStatus.Failed).json(Response(codeStatus.AllReqFailed), {
+        data: 'Data failed',
+      })
     }
     const bookNew = await new Book({
       primaryIdBook,
@@ -115,7 +119,7 @@ exports.data = async (req, res) => {
     }
     const bookData = await Book.find(bookHistoryobj).exec()
     // *** OUTPUT
-    return res.status(codeStatus.Success).json(Response(codeStatus.AllReqDone,
+    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone,
       {
         data: bookData,
       }))

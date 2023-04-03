@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const moment = require('moment')
 // const { create } = require('lodash')
 const User = require('../model/user.model')
@@ -14,7 +15,7 @@ exports.rent = async (req, res) => {
       username,
       idBooks,
     } = req.body
-    const DateUse = moment().format()
+    const DateUse = moment().format('L')
     // check admin before save
     if (!req.user || (req.user.role !== 'ADMIN')) {
       return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed),
@@ -26,7 +27,7 @@ exports.rent = async (req, res) => {
     // check user role before save
     const user = await User.findOne({ role: 'USER', username }).select('firstname lastname').lean()
     if (!(user)) {
-      return res.status(httpStatus.UserReqFailed).json(Response(codeStatus.UserReqFailed),
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.UserReqFailed),
         {
           data: 'Req USER Failed',
         })
@@ -41,7 +42,7 @@ exports.rent = async (req, res) => {
     }
     const currentBookRent = await History.find({ username, status: 'Rent' }).select('idBook bookName').lean()
     if (currentBookRent.length >= 5) {
-      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed,
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.HistoryReqFailed,
         {
           data: 'User Rent total 5 books',
         }))
@@ -49,18 +50,22 @@ exports.rent = async (req, res) => {
     const currentRentCount = currentBookRent.length
     const avaliableRent = 5 - currentRentCount
     if (book.length > avaliableRent) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.BookRentNotAvaliable,
-        {
-          data: 'Can not rent',
-        }))
+      return res.status(httpStatus.BookRentNotAvaliable).json(
+        Response(codeStatus.BookRentNotAvaliable,
+          {
+            data: 'Can not rent',
+          }),
+      )
     }
     for (let i = 0; i < book.length; i += 1) {
       const transactionId = createTransactionId()
       const _book = book[i] // array
       const { idBook, bookName, primaryIdBook } = _book // obj
+      // หาหนังสือ idBook เดียวกันแต่ถูกยืมแล้ว
       const _currentBookRent = currentBookRent.find((v) => v.idBook === idBook)
-      const __currentBookRent = currentBookRent.find((v) => v.bookName === bookName)
-      if (!(_currentBookRent && __currentBookRent)) {
+      // หาหนังสือที่ชื่อเดียวกัน แต่คนละ idBook ที่ถูกยืมไปแล้ว
+      const __currentBookRent = currentBookRent.find((v) => v.bookName === bookName && v.idBook !== idBook)
+      if (!(_currentBookRent || __currentBookRent)) {
         const primaryBookList = await Book.find({
           primaryIdBook,
           status: 'Avaliable',
@@ -90,8 +95,13 @@ exports.rent = async (req, res) => {
         }
       }
     }
+    if (bookRents.length === 0) {
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed, {
+        data: 'Can not Rent',
+      }))
+    }
     // eslint-disable-next-line max-len
-    return res.status(codeStatus.AllReqDone).json(Response(codeStatus.AllReqDone,
+    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone,
       {
         data: bookRents,
       }))
@@ -117,12 +127,16 @@ exports.return = async (req, res) => {
     const DateUse = moment().format()
     // Check role
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed))
+      return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed), {
+        data: 'Req ADMIN Failed',
+      })
     }
     // Find data that still not return
     const returnDataHistory = await History.find({ username, transactionId, status: 'Rent' }).lean()
     if (returnDataHistory.length < 1) {
-      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, { data: 'Not found this transactoinID' }))
+      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, {
+        data: 'Not found this transactoinID',
+      }))
     }
     // const returnDataHistory = returnDataHistory
     for (let i = 0; i < returnDataHistory.length; i += 1) {
@@ -172,12 +186,6 @@ exports.transaction = async (req, res) => {
       dateRent,
       dateEnd,
     } = req.body
-    if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed),
-        {
-          data: 'Req ADMIN Failed',
-        })
-    }
     let userHistoryobj = {}
     if (username) {
       userHistoryobj = {
@@ -215,6 +223,47 @@ exports.transaction = async (req, res) => {
       {
         data: userData,
       }))
+  } catch (e) {
+    return res.status(httpStatus.AllReqFailed).json({
+      code: 400,
+      message: 'error',
+      error: String(e),
+    })
+  }
+}
+
+// Recript
+exports.recript = async (req, res) => {
+  try {
+    console.log('req.body:', req.body)
+    // Input
+    const {
+      username,
+      transactionId,
+    } = req.body
+    const DateUse = moment().format()
+    // Check role
+    if (!req.user || (req.user.role !== 'ADMIN')) {
+      return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed), {
+        data: 'Req ADMIN Failed',
+      })
+    }
+    // Find data that still not return
+    const returnDataHistory = await History.find({ username, transactionId, status: 'Rent' }).lean()
+    if (returnDataHistory.length < 1) {
+      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, {
+        data: 'Not found this transactoinID',
+      }))
+    }
+    // return data
+    // save
+    // send recript
+
+    for () {
+    }
+    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone, {
+      data: transactionId,
+    }))
   } catch (e) {
     return res.status(httpStatus.AllReqFailed).json({
       code: 400,

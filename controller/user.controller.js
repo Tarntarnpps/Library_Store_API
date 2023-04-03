@@ -20,11 +20,13 @@ exports.register = async (req, res) => {
       password,
     } = req.body
     if (!(firstname && lastname && username && password)) {
-      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
+        data: 'Data not match',
+      })
     }
     const oldUser = await User.findOne({ username }).lean()
     if (oldUser) {
-      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
     }
     // Encrypt user password
     const encryptedPassword = await bcrypt.hash(password, 10)
@@ -37,9 +39,9 @@ exports.register = async (req, res) => {
       role: 'USER',
     })
     // return new user
-    return res.status(codeStatus.Success).json(codeStatus.AllReqDone, { data: user })
+    return res.status(httpStatus.AllReqDone).json(codeStatus.AllReqDone, { data: user })
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.Failed,
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed,
       {
         error: String(e),
       }))
@@ -54,7 +56,7 @@ exports.login = async (req, res) => {
       password,
     } = req.body
     if (!(username && password)) {
-      return res.status(codeStatus.Failed).json(Response(httpStatus.AllReqFailed))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
     }
     const user = await User.findOne({ username, role: 'USER' }).lean()
     if (user && (await bcrypt.compare(password, user.password))) {
@@ -82,11 +84,11 @@ exports.login = async (req, res) => {
     }
     return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed,
       {
-        status: 'Done',
+        status: 'Failed',
         data: user,
       }))
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.Failed,
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed,
       {
         error: String(e),
       }))
@@ -104,7 +106,7 @@ exports.history = async (req, res) => {
     } = req.body
     console.log(req.user)
     if (!req.user || (req.user.role !== 'USER')) {
-      return res.status(codeStatus.UserReqFailed).json(Response(httpStatus.UserReqFailed))
+      return res.status(httpStatus.UserReqFailed).json(Response(codeStatus.UserReqFailed))
     }
     let userHistoryobj = {}
     if (username) {
