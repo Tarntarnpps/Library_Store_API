@@ -15,9 +15,11 @@ exports.register = async (req, res) => {
       username,
       password,
     } = req.body
+    // Check ใส่ข้อมูลครบไหม
     if (!(firstname && lastname && username && password)) {
       return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminRegisterFailed))
     }
+    // Check ว่ามีusernameนี้ในระบบหรือยัง
     const oldUser = await User.findOne({ username }).lean()
     if (oldUser) {
       return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminInSystem))
@@ -51,6 +53,7 @@ exports.login = async (req, res) => {
       username,
       password,
     } = req.body
+    // Check ว่า match กันไหม
     if (!(username && password)) {
       return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.PasswordFailed))
     }
@@ -78,10 +81,7 @@ exports.login = async (req, res) => {
           data: user,
         }))
     }
-    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed,
-      {
-        status: 'Failed',
-      }))
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
   } catch (e) {
     return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
       error: String(e),

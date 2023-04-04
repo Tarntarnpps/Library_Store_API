@@ -204,38 +204,38 @@ exports.transaction = async (req, res) => {
 }
 
 // Recript
-exports.recript = async (req, res) => {
-  try {
-    console.log('req.body:', req.body)
-    // Input
-    const {
-      username,
-      transactionId,
-    } = req.body
-    // const DateUse = moment().format()
-    // Check role
-    if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed))
-    }
-    // Find data that still not return
-    const returnDataHistory = await History.find({
-      username, transactionId, status: 'Finish', idPaid: false,
-    }).lean()
-    if (returnDataHistory.length < 1) {
-      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed))
-    }
-    // return data
-    // save
-    // send recript
+// exports.recript = async (req, res) => {
+//   try {
+//     console.log('req.body:', req.body)
+//     // Input
+//     const {
+//       username,
+//       transactionId,
+//     } = req.body
+//     // const DateUse = moment().format()
+//     // Check role
+//     if (!req.user || (req.user.role !== 'ADMIN')) {
+//       return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed))
+//     }
+//     // Find data that still not return
+//     const returnDataHistory = await History.find({
+//       username, transactionId, status: 'Finish', idPaid: false,
+//     }).lean()
+//     if (returnDataHistory.length < 1) {
+//       return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed))
+//     }
+//     // return data
+//     // save
+//     // send recript
 
-    // for () {
-    // }
-    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone, {
-      data: transactionId,
-    }))
-  } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
-      error: String(e),
-    })
-  }
-}
+//     // for () {
+//     // }
+//     return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone, {
+//       data: transactionId,
+//     }))
+//   } catch (e) {
+//     return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
+//       error: String(e),
+//     })
+//   }
+// }
