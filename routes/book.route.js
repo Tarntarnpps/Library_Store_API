@@ -8,4 +8,5 @@ router.route('/register')
 
 router.route('/data')
   .post(book.data)
+
 module.exports = router
