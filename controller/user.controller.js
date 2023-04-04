@@ -20,9 +20,7 @@ exports.register = async (req, res) => {
       password,
     } = req.body
     if (!(firstname && lastname && username && password)) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
-        data: 'Data not match',
-      })
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
     }
     const oldUser = await User.findOne({ username }).lean()
     if (oldUser) {
@@ -134,7 +132,7 @@ exports.history = async (req, res) => {
         data: userData,
       }))
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.Failed,
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed,
       {
         error: String(e),
       }))

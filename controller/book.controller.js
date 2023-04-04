@@ -19,25 +19,18 @@ exports.register = async (req, res) => {
     } = req.body
     // add ข้อมูลหนังสือต่่างๆ ถ้ายังไม่มีของเดิม
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed),
-        {
-          data: 'User not Admin',
-        })
-    }
-    if (!(primaryIdBook && idBook)) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
-        data: 'Data not match',
-      })
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed))
+    } else if (!(primaryIdBook && idBook)) {
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
     }
     const bookOldCheck = await Book.find({ primaryIdBook }).lean()
     if (bookOldCheck.length > 0) {
+      // หาหนังสือที่มี idBook เดียวกัน
       const oldBook = bookOldCheck.find((v) => v.idBook === idBook)
       if (oldBook) {
-        return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.BookAlreadyInSystem),
-          {
-            data: 'Book Alredy in system',
-          })
+        return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.BookAlreadyInSystem))
       }
+      // ดึงข้อมูลหนังสือที่มีอยู่แล้ว
       const _bookOldCheck = bookOldCheck[0]
       const book = await new Book({
         primaryIdBook: _bookOldCheck.primaryIdBook,
@@ -51,13 +44,10 @@ exports.register = async (req, res) => {
       return res.status(httpStatus.AllReqDone).json(codeStatus.BookRegisterSuccess,
         {
           data: book,
-          message: 'Book Register Success',
         })
     }
     if (!(bookName && writer && publisher && catagory)) {
-      return res.status(httpStatus.Failed).json(Response(codeStatus.AllReqFailed), {
-        data: 'Data failed',
-      })
+      return res.status(httpStatus.Failed).json(Response(codeStatus.AllReqFailed))
     }
     const bookNew = await new Book({
       primaryIdBook,
@@ -68,15 +58,11 @@ exports.register = async (req, res) => {
       publisher,
       catagory,
     }).save()
-    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.BookRegisterSuccess,
-      {
-        data: bookNew,
-        message: 'Register New Book Success',
-      }))
+    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.BookRegisterSuccess), {
+      data: bookNew,
+    })
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json({
-      code: 400,
-      message: 'error',
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
       error: String(e),
     })
   }
@@ -124,9 +110,7 @@ exports.data = async (req, res) => {
         data: bookData,
       }))
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json({
-      code: 400,
-      message: 'error',
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
       error: String(e),
     })
   }

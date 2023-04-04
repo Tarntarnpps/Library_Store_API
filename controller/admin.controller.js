@@ -16,17 +16,11 @@ exports.register = async (req, res) => {
       password,
     } = req.body
     if (!(firstname && lastname && username && password)) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminRegisterFailed),
-        {
-          data: 'Please fill out all require fields',
-        })
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminRegisterFailed))
     }
     const oldUser = await User.findOne({ username }).lean()
     if (oldUser) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminInSystem),
-        {
-          data: 'Alredy User in system',
-        })
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminInSystem))
     }
     // Encrypt user password
     const encryptedPassword = await bcrypt.hash(password, 10)
@@ -44,9 +38,7 @@ exports.register = async (req, res) => {
         data: user,
       }))
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json({
-      code: 400,
-      message: 'error',
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
       error: String(e),
     })
   }
@@ -60,9 +52,7 @@ exports.login = async (req, res) => {
       password,
     } = req.body
     if (!(username && password)) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.PasswordFailed), {
-        data: 'Data not match',
-      })
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.PasswordFailed))
     }
     const user = await User.findOne({ username, role: 'ADMIN' }).lean()
     if (user && (await bcrypt.compare(password, user.password))) {
@@ -93,9 +83,7 @@ exports.login = async (req, res) => {
         status: 'Failed',
       }))
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json({
-      code: 400,
-      message: 'error',
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
       error: String(e),
     })
   }
@@ -112,9 +100,7 @@ exports.history = async (req, res) => {
       writer,
     } = req.body
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed), {
-        data: 'Data not match or User not ADMIN',
-      })
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed))
     }
     let bookHistoryobj = {}
     if (primaryIdBook) {
@@ -149,9 +135,7 @@ exports.history = async (req, res) => {
         message: 'Success',
       }))
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json({
-      code: 400,
-      message: 'error',
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
       error: String(e),
     })
   }

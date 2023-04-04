@@ -90,62 +90,11 @@ exports.rent = async (req, res) => {
       }))
   } catch (e) {
     console.log(e)
-    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
+      error: String(e),
+    })
   }
 }
-// Return By idBook
-// exports.returnByIdBook = async (req, res) => {
-//   try {
-//     console.log('req.body:', req.body)
-//     // Input
-//     const {
-//       username,
-//       idBooks,
-//     } = req.body
-//     const DateUse = moment().format()
-//     // Check role
-//     if (!req.user || (req.user.role !== 'ADMIN')) {
-//       return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed))
-//     }
-//     // Find data that still not return
-//     const returnDataHistory = await History.find({ username, idBook: { $in: idBooks }, status: 'Rent' }).lean()
-//     if (returnDataHistory.length < 1) {
-//       return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed))
-//     }
-//     // const returnDataHistory = returnDataHistory
-//     for (let i = 0; i < returnDataHistory.length; i += 1) {
-//       const returnHistory = returnDataHistory[i]
-//       const { idBook } = returnHistory
-//       // Check
-//       const CalculatesDate = calDate({
-//         date1: returnHistory.dateRent,
-//         date2: DateUse,
-//       })
-//       await History.updateOne({
-//         username,
-//         idBook,
-//         status: 'Rent',
-//       }, {
-//         dateEnd: DateUse,
-//         penalty: CalculatesDate.calDate,
-//         status: 'Finish',
-//       })
-//       await Book.updateOne({
-//         idBook,
-//         status: 'Rent',
-//       }, {
-//         status: 'Avaliable',
-//       })
-//     }
-//     return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone))
-//   } catch (e) {
-//     return res.status(httpStatus.AllReqFailed).json({
-//       code: 400,
-//       message: 'error',
-//       error: String(e),
-//     })
-//   }
-// }
 
 // Return By transactionId
 exports.returnByTransactionId = async (req, res) => {
@@ -193,9 +142,7 @@ exports.returnByTransactionId = async (req, res) => {
     }
     return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone))
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json({
-      code: 400,
-      message: 'error',
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
       error: String(e),
     })
   }
@@ -250,9 +197,7 @@ exports.transaction = async (req, res) => {
         data: userData,
       }))
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json({
-      code: 400,
-      message: 'error',
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
       error: String(e),
     })
   }
@@ -289,6 +234,8 @@ exports.recript = async (req, res) => {
       data: transactionId,
     }))
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed), {
+      error: String(e),
+    })
   }
 }
