@@ -18,43 +18,28 @@ exports.rent = async (req, res) => {
     const DateUse = moment().format('L')
     // check admin before save
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed),
-        {
-          data: 'Req ADMIN Failed',
-        })
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AdminReqFailed))
     }
     let bookRents = []
     // check user role before save
     const user = await User.findOne({ role: 'USER', username }).select('firstname lastname').lean()
     if (!(user)) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.UserReqFailed),
-        {
-          data: 'Req USER Failed',
-        })
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.UserReqFailed))
     }
     const { firstname, lastname } = user
     const book = await Book.find({ idBook: { $in: idBooks }, status: 'Avaliable' }).select('idBook bookName primaryIdBook').lean()
     if (book.length === 0) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.BookReqFailed,
-        {
-          data: 'Req Book Failed, B/C not Avaliable',
-        }))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.BookReqFailed))
     }
     const currentBookRent = await History.find({ username, status: 'Rent' }).select('idBook bookName').lean()
     if (currentBookRent.length >= 5) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.HistoryReqFailed,
-        {
-          data: 'User Rent total 5 books',
-        }))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.HistoryReqFailed))
     }
     const currentRentCount = currentBookRent.length
     const avaliableRent = 5 - currentRentCount
     if (book.length > avaliableRent) {
       return res.status(httpStatus.BookRentNotAvaliable).json(
-        Response(codeStatus.BookRentNotAvaliable,
-          {
-            data: 'Can not rent',
-          }),
+        Response(codeStatus.BookRentNotAvaliable),
       )
     }
     for (let i = 0; i < book.length; i += 1) {
@@ -96,9 +81,7 @@ exports.rent = async (req, res) => {
       }
     }
     if (bookRents.length === 0) {
-      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed, {
-        data: 'Can not Rent',
-      }))
+      return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
     }
     // eslint-disable-next-line max-len
     return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone,
@@ -107,16 +90,65 @@ exports.rent = async (req, res) => {
       }))
   } catch (e) {
     console.log(e)
-    return res.status(httpStatus.AllReqFailed).json({
-      code: 400,
-      message: 'error',
-      error: String(e),
-    })
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
   }
 }
 // Return By idBook
+// exports.returnByIdBook = async (req, res) => {
+//   try {
+//     console.log('req.body:', req.body)
+//     // Input
+//     const {
+//       username,
+//       idBooks,
+//     } = req.body
+//     const DateUse = moment().format()
+//     // Check role
+//     if (!req.user || (req.user.role !== 'ADMIN')) {
+//       return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed))
+//     }
+//     // Find data that still not return
+//     const returnDataHistory = await History.find({ username, idBook: { $in: idBooks }, status: 'Rent' }).lean()
+//     if (returnDataHistory.length < 1) {
+//       return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed))
+//     }
+//     // const returnDataHistory = returnDataHistory
+//     for (let i = 0; i < returnDataHistory.length; i += 1) {
+//       const returnHistory = returnDataHistory[i]
+//       const { idBook } = returnHistory
+//       // Check
+//       const CalculatesDate = calDate({
+//         date1: returnHistory.dateRent,
+//         date2: DateUse,
+//       })
+//       await History.updateOne({
+//         username,
+//         idBook,
+//         status: 'Rent',
+//       }, {
+//         dateEnd: DateUse,
+//         penalty: CalculatesDate.calDate,
+//         status: 'Finish',
+//       })
+//       await Book.updateOne({
+//         idBook,
+//         status: 'Rent',
+//       }, {
+//         status: 'Avaliable',
+//       })
+//     }
+//     return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone))
+//   } catch (e) {
+//     return res.status(httpStatus.AllReqFailed).json({
+//       code: 400,
+//       message: 'error',
+//       error: String(e),
+//     })
+//   }
+// }
+
 // Return By transactionId
-exports.return = async (req, res) => {
+exports.returnByTransactionId = async (req, res) => {
   try {
     console.log('req.body:', req.body)
     // Input
@@ -127,16 +159,12 @@ exports.return = async (req, res) => {
     const DateUse = moment().format()
     // Check role
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed), {
-        data: 'Req ADMIN Failed',
-      })
+      return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed))
     }
     // Find data that still not return
     const returnDataHistory = await History.find({ username, transactionId, status: 'Rent' }).lean()
     if (returnDataHistory.length < 1) {
-      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, {
-        data: 'Not found this transactoinID',
-      }))
+      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed))
     }
     // const returnDataHistory = returnDataHistory
     for (let i = 0; i < returnDataHistory.length; i += 1) {
@@ -163,9 +191,7 @@ exports.return = async (req, res) => {
         status: 'Avaliable',
       })
     }
-    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone, {
-      data: transactionId,
-    }))
+    return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone))
   } catch (e) {
     return res.status(httpStatus.AllReqFailed).json({
       code: 400,
@@ -241,34 +267,28 @@ exports.recript = async (req, res) => {
       username,
       transactionId,
     } = req.body
-    const DateUse = moment().format()
+    // const DateUse = moment().format()
     // Check role
     if (!req.user || (req.user.role !== 'ADMIN')) {
-      return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed), {
-        data: 'Req ADMIN Failed',
-      })
+      return res.status(httpStatus.Failed).json(Response(codeStatus.AdminReqFailed))
     }
     // Find data that still not return
-    const returnDataHistory = await History.find({ username, transactionId, status: 'Rent' }).lean()
+    const returnDataHistory = await History.find({
+      username, transactionId, status: 'Finish', idPaid: false,
+    }).lean()
     if (returnDataHistory.length < 1) {
-      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed, {
-        data: 'Not found this transactoinID',
-      }))
+      return res.status(httpStatus.HistoryReqFailed).json(Response(codeStatus.HistoryReqFailed))
     }
     // return data
     // save
     // send recript
 
-    for () {
-    }
+    // for () {
+    // }
     return res.status(httpStatus.AllReqDone).json(Response(codeStatus.AllReqDone, {
       data: transactionId,
     }))
   } catch (e) {
-    return res.status(httpStatus.AllReqFailed).json({
-      code: 400,
-      message: 'error',
-      error: String(e),
-    })
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed))
   }
 }

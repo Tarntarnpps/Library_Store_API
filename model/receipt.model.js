@@ -4,7 +4,7 @@ const mongoose = require('../config/database')
 const DateUse = moment().format('L')
 const statusUser = ['Rent', 'Finish']
 
-const recriptSchema = mongoose.Schema({
+const receiptSchema = mongoose.Schema({
   transactionId: { type: String },
   payDate: { type: Date, default: DateUse },
   firstname: { type: String },
@@ -17,6 +17,7 @@ const recriptSchema = mongoose.Schema({
   dateRent: { type: Date, require: true, default: DateUse },
   dateEnd: { type: Date },
   penalty: { type: Number, default: 0 },
+  isPaid: { type: Boolean, default: false },
 })
 
-module.exports = mongoose.model('historyData', recriptSchema)
+module.exports = mongoose.model('historyData', receiptSchema)

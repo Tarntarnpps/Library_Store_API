@@ -6,8 +6,8 @@ const transaction = require('../controller/transaction.controller')
 router.route('/rent')
   .post(transaction.rent)
 
-router.route('/return')
-  .post(transaction.return)
+router.route('/returnByTransactionId')
+  .post(transaction.returnByTransactionId)
 
 router.route('/transaction')
   .post(transaction.transaction)
