@@ -1,24 +1,30 @@
 const jwt = require('jsonwebtoken')
 const User = require('../model/user.model')
-const { Response, codeStatus } = require('../config/response')
+const { Response, codeStatus, httpStatus } = require('../config/response')
 
 const config = process.env
 
-const verifyToken = async (req, res, next) => {
+const verifyToken = async ({ token }) => {
+  const authOptionnal = await User.findOne({ token }).lean()
+  const decoded = jwt.verify(token, config.TOKEN_KEY)
+  if (!authOptionnal) throw 'worng token'
+  return decoded
+}
+const required = async (req, res, next) => {
   const token = req.body.token || req.query.token || req.headers['x-access-token']
-  console.log(token)
+  // console.log(token)
   if (!token) {
-    return res.status(codeStatus.Failed).json({ data: Response })
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed, {
+      data: 'Failed',
+    }))
   }
   try {
-    const userId = await User.findOne({ token }).lean()
-    const decoded = jwt.verify(token, config.TOKEN_KEY)
-    console.log(userId)
-    if (!userId) throw 'wrong token'
-    req.user = decoded
+    req.user = await verifyToken({ token })
   } catch (e) {
     console.log(e)
-    return res.status(codeStatus.Failed).json({ data: 'Invalid Token' })
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed, {
+      data: 'Invalid Token',
+    }))
   }
   return next()
 }
@@ -29,17 +35,16 @@ const optional = async (req, res, next) => {
     return next()
   }
   try {
-    const authOptionnal = await User.findOne({ token }).lean()
-    const decoded = jwt.verify(token, config.TOKEN_KEY)
-    if (!authOptionnal) throw 'wrong token'
-    req.user = decoded
+    req.user = await verifyToken({ token })
   } catch (e) {
-    return res.status(codeStatus.AllReqFailed).json({ data: 'Invalid Token' })
+    return res.status(httpStatus.AllReqFailed).json(Response(codeStatus.AllReqFailed, {
+      data: 'Invalid Token',
+    }))
   }
   return next()
 }
 
 module.exports = {
   optional,
-  verifyToken,
+  required,
 }
